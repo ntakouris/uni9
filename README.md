@@ -1,18 +1,17 @@
+  /$$$$$$  /$$$$$$$$ /$$$$$$ /$$$$$$$ 
+ /$$__  $$| $$_____/|_  $$_/| $$__  $$
+| $$  \__/| $$        | $$  | $$  \ $$
+| $$      | $$$$$     | $$  | $$  | $$
+| $$      | $$__/     | $$  | $$  | $$
+| $$    $$| $$        | $$  | $$  | $$
+|  $$$$$$/| $$$$$$$$ /$$$$$$| $$$$$$$/
+ \______/ |________/|______/|_______/ 
+--------------------------------------
 
-     ,-----.,--.                  ,--. ,---.   ,--.,------.  ,------.
-    '  .--./|  | ,---. ,--.,--. ,-|  || o   \  |  ||  .-.  \ |  .---'
-    |  |    |  || .-. ||  ||  |' .-. |`..'  |  |  ||  |  \  :|  `--, 
-    '  '--'\|  |' '-' ''  ''  '\ `-' | .'  /   |  ||  '--'  /|  `---.
-     `-----'`--' `---'  `----'  `---'  `--'    `--'`-------' `------'
-    ----------------------------------------------------------------- 
-
-
-Hi there! Welcome to Cloud9 IDE!
-
-To get you started, create some files, play with the terminal,
-or visit http://docs.c9.io for our documentation.
-If you want, you can also go watch some training videos at
-http://www.youtube.com/user/c9ide.
-
-Happy coding!
-The Cloud9 IDE team
+Hi there, this is a cloud9 vps. Evdoxos sucks. Centos sucks. It should be ubuntu,
+not centos nor redhat enterprise jesus. No superuser permissions = rip for a
+normal software developer. Bro they don't even allow us to use a normal IDE.
+Use pico or vim they said.... Gosh! At least we've got git and make installed.
+These piece of shit VMs still run java 6. I'll use my trusty 160$ chromebook
+to do all the assignments at c9 or on my desktop. Just pull em and maybe
+make/mvn package crap in order to work.
