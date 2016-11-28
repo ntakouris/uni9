@@ -19,17 +19,21 @@ char * asterisks(int num){
     return ret;
 }
 
+int isPunctuation(char c){
+    return c == '.' || c == '(' || c == ')';
+}
+
 int main(void){
 
     
-    char sentence[] = " 1 2 3 aa bb ggg cc abc fgh 666666    7777777 ";
+    char sentence[] = " 1 2 3 aa bb ggg cc abc (fgh) 666666  .  7777777 ";
     int char_number = sizeof(sentence)/sizeof(sentence[0]);;
 
     //get max word size
     int maxWordSize = 0;
     int wordSize = 0;
     for(int i = 0; i < char_number; i++){
-        if(sentence[i] == ' ' || sentence[i] == '\0'){
+        if(sentence[i] == ' ' || sentence[i] == '\0' || isPunctuation(sentence[i])){
             if(wordSize == 0){
                 continue;
             }
@@ -61,7 +65,7 @@ int main(void){
     //populate occurences
     wordSize = 0;
     for(int i = 0; i < char_number; i++){
-        if(sentence[i] == ' ' || sentence[i] == '\0'){
+        if(sentence[i] == ' ' || sentence[i] == '\0' || isPunctuation(sentence[i])){
             if(wordSize == 0){
                 continue;
             }
