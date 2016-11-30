@@ -20,8 +20,8 @@ char * hiddenWord(char * word, int * ints , int size){
     char *ret = malloc(sizeof(char) * size);
     int i = 0;
     for(i = 0; i < size;i++){
-        if(ints[i]){
-            *(ret+1) = *(word+i);
+        if(*(ints+i)){
+            *(ret+i) = *(word+i);
         }else{
             *(ret+i) = '_';
         }
@@ -44,7 +44,7 @@ void charFound(char * word, int * ints , char c ,int size){
     for(i = 0;i<size;i++){
         if(*(word+i) == c){
             *(ints+i) = 1;
-            printf("%d", *(ints+1));
+            //printf("%d", *(ints+i));
         }
     }
 }
@@ -53,7 +53,7 @@ int isCharAlreadyFound(char * word, int * ints , char c ,int size){
     int i = 0;
     for(i = 0;i<size;i++){
         //printf("word: %c , int: %d\n" , *(word+i) , *(ints+1));
-        if(*(word+i) == c && *(ints+1) == 1){
+        if(*(word+i) == c && *(ints+i) == 1){
             //printf("Letter already found\n");
             return 1;
         }
@@ -90,28 +90,38 @@ int main(void){
 
     while(!reduceIntArrayToBool(found, wordSize) && triesLeft > 0){
         
+        system("clear");
+
         for(i=0;i<wordSize;i++){
             printf("Letter: %c - %d  ", *(word+i), *(found+1));
         }
         printf("\n");
 
         char * toPrint = hiddenWord(word, found, wordSize);
-        printf("Word: %s\n", toPrint);
+        printf("Word: %s\n\n", toPrint);
+
+        printf("Tries left: %d \n\n", triesLeft);
+        printf("> ");
+
         char c;
-        scanf("%c" , &c);
-        scanf("%c", &c);
+        do{
+            
+            scanf("%c" , &c);
+            scanf("%c", &c);
+        }while(c == ' ' || c == 0 || c == '\n');
+
 
         int alreadyFound = isCharAlreadyFound(word, found , c , wordSize);
 
         if(alreadyFound){
-            printf("Letter already found! Please try a different one!");
+            printf("Letter already found! Please try a different one!\n");
             continue;
         }
 
         int bExistsInWord = existsInWord(c, word, wordSize);
 
         if(bExistsInWord){
-            printf("Letter found!");
+            printf("Letter found!\n");
             charFound(word, found , c, wordSize);
         }else{
             printf("Oops!\n");
