@@ -1,0 +1,9 @@
+#BlueJ class context
+comment0.params=size
+comment0.target=MyBox(double)
+comment1.params=width\ height\ length
+comment1.target=MyBox(double,\ double,\ double)
+comment2.params=
+comment2.target=java.lang.String\ toString()
+comment2.text=\ calculate()\ and\ volume()\ den\ xreiazetai\ overriden\ ylopoihsh\:\ doulevoun\ genika\ gia\ \r\nkoutia\ ara\ kai\ gia\ kyboys.
+numComments=3
