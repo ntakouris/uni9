@@ -1,0 +1,12 @@
+#BlueJ class context
+comment0.params=hw
+comment0.target=void\ setHoursWorked(int)
+comment1.params=
+comment1.target=int\ getHoursWorked()
+comment2.params=hp
+comment2.target=void\ setHourlyPayment(int)
+comment3.params=
+comment3.target=int\ getHourlyPayment()
+comment4.params=
+comment4.target=int\ payment()
+numComments=5
