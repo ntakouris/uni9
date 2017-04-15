@@ -1,0 +1,19 @@
+#BlueJ class context
+comment0.target=Room
+comment1.params=
+comment1.target=Room()
+comment2.params=capacity\ perPersonPrice
+comment2.target=Room(int,\ double)
+comment3.params=
+comment3.target=int\ getId()
+comment4.params=
+comment4.target=Reservation[]\ getReservations()
+comment5.params=res
+comment5.target=boolean\ addReservation(Reservation)
+comment6.params=resId
+comment6.target=boolean\ cancelReservation(int)
+comment7.params=
+comment7.target=int\ completenessPercentage()
+comment8.params=
+comment8.target=double\ totalCost()
+numComments=9

@@ -1,0 +1,19 @@
+#BlueJ class context
+comment0.target=Reservation
+comment1.params=clientName\ arrival\ duration\ personCount
+comment1.target=Reservation(java.lang.String,\ int,\ int,\ int)
+comment2.params=
+comment2.target=java.lang.String\ getClientName()
+comment3.params=room
+comment3.target=void\ setRoom(Room)
+comment4.params=
+comment4.target=int\ getArrival()
+comment5.params=
+comment5.target=int\ getDuration()
+comment6.params=
+comment6.target=int\ getPersonCount()
+comment7.params=
+comment7.target=int\ getId()
+comment8.params=
+comment8.target=Room\ getRoom()
+numComments=9

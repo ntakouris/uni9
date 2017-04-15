@@ -1,0 +1,7 @@
+#BlueJ class context
+comment0.target=RoomTypeA
+comment1.params=capacity\ pricePerDay
+comment1.target=RoomTypeA(int,\ double)
+comment2.params=
+comment2.target=double\ totalCost()
+numComments=3
