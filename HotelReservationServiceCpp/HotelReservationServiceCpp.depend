@@ -1,0 +1,73 @@
+# depslib dependency file v1.0
+1494351234 source:c:\users\zarkopafilis\desktop\hotelreservationservicecpp\main.cpp
+	<iostream>
+	<string>
+	<algorithm>
+	<stdlib.h>
+	<time.h>
+	"Reservation.h"
+	"Room.h"
+	"Hotel.h"
+	"RoomTypeA.h"
+	"RoomTypeB.h"
+	"RoomTypeC.h"
+	"RoomTypeD.h"
+	"RoomTypeE.h"
+
+1494321824 source:c:\users\zarkopafilis\desktop\hotelreservationservicecpp\src\reservation.cpp
+	"Reservation.h"
+
+1494234446 c:\users\zarkopafilis\desktop\hotelreservationservicecpp\include\reservation.h
+	<string>
+	"Room.h"
+
+1494239266 c:\users\zarkopafilis\desktop\hotelreservationservicecpp\include\room.h
+
+1494324620 source:c:\users\zarkopafilis\desktop\hotelreservationservicecpp\src\room.cpp
+	"Room.h"
+	"Reservation.h"
+
+1494322614 source:c:\users\zarkopafilis\desktop\hotelreservationservicecpp\src\roomtypea.cpp
+	"RoomTypeA.h"
+
+1494234608 c:\users\zarkopafilis\desktop\hotelreservationservicecpp\include\roomtypea.h
+	"Room.h"
+	"Reservation.h"
+
+1494322620 source:c:\users\zarkopafilis\desktop\hotelreservationservicecpp\src\roomtypeb.cpp
+	"RoomTypeB.h"
+
+1494234201 c:\users\zarkopafilis\desktop\hotelreservationservicecpp\include\roomtypeb.h
+	"RoomTypeA.h"
+
+1494235262 source:c:\users\zarkopafilis\desktop\hotelreservationservicecpp\src\roomtypec.cpp
+	"RoomTypeC.h"
+
+1494234906 c:\users\zarkopafilis\desktop\hotelreservationservicecpp\include\roomtypec.h
+	"Reservation.h"
+	"Room.h"
+
+1494235587 source:c:\users\zarkopafilis\desktop\hotelreservationservicecpp\src\roomtyped.cpp
+	"RoomTypeD.h"
+
+1494235316 c:\users\zarkopafilis\desktop\hotelreservationservicecpp\include\roomtyped.h
+	"Reservation.h"
+	"Room.h"
+
+1494235610 source:c:\users\zarkopafilis\desktop\hotelreservationservicecpp\src\roomtypee.cpp
+	"RoomTypeE.h"
+
+1494235535 c:\users\zarkopafilis\desktop\hotelreservationservicecpp\include\roomtypee.h
+	"Reservation.h"
+	"Room.h"
+
+1494350830 source:c:\users\zarkopafilis\desktop\hotelreservationservicecpp\src\hotel.cpp
+	"Hotel.h"
+
+1494350825 c:\users\zarkopafilis\desktop\hotelreservationservicecpp\include\hotel.h
+	<iostream>
+	<string>
+	<list>
+	"Reservation.h"
+	"Room.h"
+
