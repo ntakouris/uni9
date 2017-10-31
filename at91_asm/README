@@ -1,0 +1,10 @@
+## AT 91
+..is the crappy arm based board with quite some stuff on it
+(bluetooth, usb, bla bla) that some professor(s) on the University of Patras
+made in a much pre-arduino/RPi era.
+
+Funny thing is that we are going to write in binary next semester...
+
+
+* The booklet of the board is copyrighted and in Greek, so I won't be uploading it....
+* Just read the comments
