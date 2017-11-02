@@ -7,7 +7,7 @@ STMDB {R0-R3}
 
 
 @Initialize counter
-MOV R0, #0x1
+MOV R0, #1
 
 LOOP:
 @Load contents of lines of arrays
@@ -19,13 +19,13 @@ ADD R3, R1, R2
 @Save addition result into ArrayC
 STRB R3, [=ArrayC, R0]
 
-CMP R0, #0x81  @8 times 16 + 1 = 129
+CMP R0, #17
 
 @Increment counter (only takes effect if jump happens afterwards)
-ADD R0, R0, #0x8
+ADD R0, R0, #1
 
 @If not done, increment counter (R3) and jump back
-BEQ LOOP @Jump to loop
+BEQ LOOP
 
 
 LDMIA {R0-R3, PC}
