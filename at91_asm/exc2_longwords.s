@@ -22,6 +22,9 @@ LDR R2, [R5, R0]
 @Add with carry on status register
 ADC R3, R1, R2
 
+@Save addition result into ArrayC
+STR R3, [R6, R0]
+
 CMP R0, #14
 
 @Increment counter (only takes effect if jump happens afterwards)
@@ -30,8 +33,7 @@ ADD R0, R0, #4
 @If not done, increment counter (R3) and jump back
 BNE LOOP
 
-@Save addition result into ArrayC
-STR R3, [R6]
+
 
 LDMIA R13!, {R0-R12, PC}
 
