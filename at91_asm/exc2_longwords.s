@@ -7,7 +7,7 @@ STMDB R13!, {R0-R12, R14}
 
 
 @Initialize counter
-MOV R0, #4
+MOV R0, #0
 
 @Push label addresses into registers
 LDR R4, =arrayA
@@ -22,7 +22,7 @@ LDR R2, [R5, R0]
 @Add with carry on status register
 ADC R3, R1, R2
 
-CMP R0, #16
+CMP R0, #14
 
 @Increment counter (only takes effect if jump happens afterwards)
 ADD R0, R0, #4
@@ -31,7 +31,7 @@ ADD R0, R0, #4
 BNE LOOP
 
 @Save addition result into ArrayC
-STR R3, [R6, R0]
+STR R3, [R6]
 
 LDMIA R13!, {R0-R12, PC}
 
