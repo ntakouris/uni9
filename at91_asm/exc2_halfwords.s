@@ -7,7 +7,7 @@ STMDB R13!, {R0-R12, R14}
 
 
 @Initialize counter
-MOV R0, #0
+MOV R0, #2
 
 @Push label addresses into registers
 LDR R4, =arrayA
@@ -16,18 +16,18 @@ LDR R6, =arrayC
 
 LOOP:
 @Load contents of lines of arrays
-LDRB R1, [R4, R0]
-LDRB R2, [R5, R0]
+LDRH R1, [R4, R0]
+LDRH R2, [R5, R0]
 
 ADD R3, R1, R2
 
 @Save addition result into ArrayC
-STRB R3, [R6, R0]
+STRH R3, [R6, R0]
 
 CMP R0, #16
 
 @Increment counter (only takes effect if jump happens afterwards)
-ADD R0, R0, #1
+ADD R0, R0, #2
 
 @If not done, increment counter (R3) and jump back
 BNE LOOP
