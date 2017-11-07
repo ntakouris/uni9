@@ -24,7 +24,7 @@ ADD R3, R1, R2
 @Save addition result into ArrayC
 STR R3, [R6, R0]
 
-CMP R0, #14
+CMP R0, #12
 
 @Increment counter (only takes effect if jump happens afterwards)
 ADD R0, R0, #4
