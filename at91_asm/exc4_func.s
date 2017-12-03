@@ -17,7 +17,10 @@ MOV R8, #0 @Counter
 
 LOOP:
 
-BL Subrtn
+B Subrtn
+
+AfterLoop:
+ADD R0,R0, #3
 
 CMP R8, #3
 ADD R8, R8, #1
@@ -28,7 +31,6 @@ END:
 LDMIA R13!, {R0-R12, PC}
 
 Subrtn:
-STMDB R13!, {R1, R2, R3}
 
 LDRB R1, [R0] @Ai
 LDRB R2, [R0, #1] @Bi
@@ -59,8 +61,7 @@ CMP R3, R2
 BHI UpdateGreater @Break if Higher (R3 > R2)
 
 ExitSubrtn:
-LDMIA R13!, {R1, R2, R3}
-MOV PC, LR 
+B AfterLoop 
 @Subrtn
 
 UpdateGreater:
