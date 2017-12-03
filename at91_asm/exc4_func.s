@@ -6,8 +6,8 @@
 main:
 STMDB R13!, {R0-R12, R14}
 
-MOV R0, =Values
-MOV R4, =Const
+LDR R0, =Values
+LDR R4, =Const
 
 LDRB R5, [R4] @Z0
 LDRB R6, [R4, #1] @Z1
@@ -24,6 +24,7 @@ ADD R8, R8, #1
 
 BNE LOOP
 
+END:
 LDMIA R13!, {R0-R12, PC}
 
 Subrtn:
@@ -35,18 +36,19 @@ LDRB R3, [R0, #2] @Ci
 
 @Calculate: 5 * (Ai * Z0 + Bi * Z1 - Ci * Z2) / 64
 
-MUL R1, R1, R5 
-MUL R2, R2, R6
-MUL R3, R3, R7
+MUL R1, R5, R1 
+MUL R2, R6, R2
+MUL R3, R7, R3
 
 ADD R1, R1, R2
 SUB R1, R1, R3
 
-MUL R1, R1, #5 
+MOV R9, #5
+MUL R1, R9, R1 
 
 QI:
 @64 = 2^6
-LSR R1, R1, #6
+LSR R1, R1, #6																	     
 
 @Check if resut > [Const, #3]
 LDRB R2, [R4, #3]
@@ -65,10 +67,9 @@ STRB R1, [R4, #3]
 STRB R8, [R4, #4]
 B ExitSubrtn
 
-
 .data
 Values:
-.byte 0x02 0x03 0x04
+.byte 0x02, 0x03, 0x04
 .byte 0x10, 0x05, 0x06
 .byte 0x0B, 0x02, 0x0D
 .byte 0x01, 0x0C, 0x08

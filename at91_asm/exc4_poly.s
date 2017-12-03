@@ -6,10 +6,9 @@
 main:
 STMDB R13!, {R0-R12, R14}
 
-MOV R1, =Values
-MOV R2, =Const
+LDR R1, =Values
+LDR R2, =Const
 MOV R3, #0 @Result
-
 
 MOV R8, #0 @Counter
 
@@ -34,7 +33,7 @@ MOV R5, R8
 
 CMP R8 , #0
 MOV R6, #1
-BE Powend @If power is 0
+BEQ Powend @If power is 0
 
 POW: @R6 = R0 ^ R8
 MUL R6, R6, R0
