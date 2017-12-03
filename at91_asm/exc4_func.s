@@ -48,14 +48,15 @@ MUL R1, R9, R1
 
 QI:
 @64 = 2^6
-LSR R1, R1, #6																	     
+@LSR R3, R1, #6
+MOV R3, R1,LSR #6																	     
 
 @Check if resut > [Const, #3]
 LDRB R2, [R4, #3]
 
-CMP R1, R2
+CMP R3, R2
 
-BHI UpdateGreater @Break if Higher (R1 > R2)
+BHI UpdateGreater @Break if Higher (R3 > R2)
 
 ExitSubrtn:
 LDMIA R13!, {R1, R2, R3}
@@ -63,7 +64,7 @@ MOV PC, LR
 @Subrtn
 
 UpdateGreater:
-STRB R1, [R4, #3]
+STRB R3, [R4, #3]
 STRB R8, [R4, #4]
 B ExitSubrtn
 
