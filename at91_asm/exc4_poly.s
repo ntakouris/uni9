@@ -17,6 +17,7 @@ LOOP:
 LDR R0, [R1, R8]
 
 BL Subrtn
+AfterLoop:
 
 CMP R8, #6
 ADD R8, R8, #1
@@ -27,7 +28,6 @@ END:
 LDMIA R13!, {R0-R12, PC}
 
 Subrtn:
-STMDB R13!, {R4, R5, R6}
 
 MOV R5, R8
 
@@ -50,8 +50,7 @@ MUL R6, R6, R4 @Ai * X ^ i
 @Add to result
 ADD R3, R3, R6
 
-LDMIA R13!, {R4, R5, R6}
-MOV PC, LR 
+B AfterLoop
 @Subrtn
 
 .data
