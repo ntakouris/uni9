@@ -19,7 +19,7 @@ LDR R0, [R1, R8]
 BL Subrtn
 AfterLoop:
 
-CMP R8, #6
+CMP R8, #3
 ADD R8, R8, #1
 
 BNE LOOP
@@ -29,26 +29,21 @@ LDMIA R13!, {R0-R12, PC}
 
 Subrtn:
 
-MOV R5, R8
+MOV R4, #6 @i
+LDRB R5, [R2, R4] @Bi (b6 initial)
 
-CMP R8 , #0
-MOV R6, #1
-BEQ Powend @If power is 0
+Calc:
+CMP R4, #0
 
-POW: @R6 = R0 ^ R8
-MUL R6, R6, R0
+SUB R4, R4, #1
+LDRB R6, [R2, R6] @Ai
 
-CMP R5, #1
-SUB R5, R5, #1
-BNE POW
+MUL R5, R0, R5
+ADD R5, R5, R6
 
-POWEND:
+BNE Calc
 
-LDRB R4, [R2, R8] @Ai
-
-MUL R6, R6, R4 @Ai * X ^ i
-@Add to result
-ADD R3, R3, R6
+Result: @CHECK R5 HERE
 
 B AfterLoop
 @Subrtn
