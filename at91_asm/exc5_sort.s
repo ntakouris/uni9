@@ -6,7 +6,7 @@ main:
 STMDB R13!, {R0-R12, R14}
 
 START:
-MOV R0, =Array
+LDR R0, =Array
 MOV R1, #20
 
 BL Sort 
@@ -29,7 +29,7 @@ ADD R2, R2, #1
 LDRB R5, [R0, R2] @Next Element
 MOV R6, R2 @Next Element Index
 
-CMPB R5, R3 @Find Greater
+CMP R5, R3 @Find Greater
 
 BHI LoopEnd
 @These execute only if R3 > R5 (swap)
@@ -44,9 +44,9 @@ LDMIA R13!, {R2-R6}
 MOV PC, LR
 
 Check:
-STMDB R13!, {}
+STMDB R13!, {R2-R6}
 
-MOV R2, =Correct
+LDR R2, =Correct
 MOV R3, #0
 MOV R6, #0x0000
 
@@ -55,14 +55,14 @@ LDRB R4, [R0, R3]
 ADD R3, R3, #1
 LDRB R5, [R0, R3]
 
-CMPB R4, R5
+CMP R4, R5
 @If R4 > R5
 STRHI R6, [R2]
 
-CMPB R3, #20
+CMP R3, #20
 BNE CL
 
-LDMIA R13!, {}
+LDMIA R13!, {R2-R6}
 MOV PC, LR
 
 .data
