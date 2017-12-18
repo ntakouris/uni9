@@ -18,12 +18,13 @@ LDMIA R13!, {R0-R12, PC}
 Sort:
 STMDB R13!, {R2-R6}
 
-MOV R2, #0 @Counter
+MOV R7, #0 @Index Tracker
 
-Loop:
-LDRB R3, [R0, R2] @Current Element
-MOV R4, R2 @Current Element Index
-
+OuterLoop:
+LDRB R3, [R0, R7] @Current Minimum Element
+MOV R4, R7 @Current Minimum Element Index
+MOV R2, R7 @Counter
+GreaterLoop:
 ADD R2, R2, #1
 
 LDRB R5, [R0, R2] @Next Element
@@ -31,14 +32,23 @@ MOV R6, R2 @Next Element Index
 
 CMP R5, R3 @Find Greater
 
-BHI LoopEnd
-@These execute only if R3 > R5 (swap)
-STRB R3, [R0, R6]
-STRB R5, [R0, R4] 
-LoopEnd:
+BHI GreaterLoopEnd
+@These execute only if R3 > R5 (find max element)
+MOV R3, R5
+MOV R4, R6 
+GreaterLoopEnd:
 
 CMP R2, R1
-BNE Loop
+BNE GreaterLoop
+
+LDRB R5, [R0, R7] 
+
+STRB R5, [R0, R4]
+STRB R3, [R0, R7]
+
+ADD R7, R7, #1
+CMP R7, R1
+BNE OuterLoop
 
 LDMIA R13!, {R2-R6}
 MOV PC, LR
@@ -56,7 +66,7 @@ ADD R3, R3, #1
 LDRB R5, [R0, R3]
 
 CMP R4, R5
-@If R4 > R5
+@If R4 > R5 - Wrong
 STRHI R6, [R2]
 
 CMP R3, #20
