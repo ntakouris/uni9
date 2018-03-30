@@ -2,30 +2,18 @@ package me.zarkopafilis.ceid;
 
 import me.zarkopafilis.ceid.algo.*;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Main {
+import static me.zarkopafilis.ceid.IOHelper.readIntegersFile;
+import static me.zarkopafilis.ceid.IOHelper.scanInt;
+
+public class Main{
 
     static long time;
 
     public static void main(String[] args) {
-        String integersFile = "C:\\Users\\Zarkopafilis\\Desktop\\uni9\\uni9\\project-datastructs\\data\\integers.txt";
-
-        /* Read File */
-        List<Integer> ints = new ArrayList<>();
-        try (BufferedReader br = Files.newBufferedReader(Paths.get(integersFile))) {
-            ints = br.lines().map(it -> Integer.parseInt(it)).collect(Collectors.toList());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        List<Integer> ints = readIntegersFile();
 
         Integer[] arr = new Integer[ints.size()];
         ints.toArray(arr);
@@ -75,9 +63,5 @@ public class Main {
             System.out.println("Position: " + pos + " - Time took: " + (System.nanoTime() - time) + " ns");
         }
 
-    }
-
-    private static int scanInt() {
-        return Integer.parseInt(new Scanner(System.in).nextLine());
     }
 }
