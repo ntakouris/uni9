@@ -24,11 +24,32 @@ public class Benchmarks {
         RedBlackTree tree = new RedBlackTree();
         time = System.nanoTime();
         for (Integer i : ints) {
+            System.out.println(i);
             tree.insert(i);
         }
         System.out.println("Time took to construct red black tree: " + (System.nanoTime() - time) + " ns");
 
+        for (Integer integer : elements) {
+            time = System.nanoTime();
+            tree.search(integer);
+            long diff = System.nanoTime() - time;
 
+            if (diff > worse) {
+                worse = diff;
+            }
+
+            if (mean == 0) {
+                mean = diff;
+            }else{
+                mean = (mean + diff) / 2;
+            }
+        }
+
+        System.out.println("> RedBlackTree Search");
+        System.out.println(">    > Mean Time: " + mean + " ns");
+        System.out.println(">    > Worse Time: " + worse + " ns");
+        System.out.println();
+        System.out.println();
 
         return;
 //
