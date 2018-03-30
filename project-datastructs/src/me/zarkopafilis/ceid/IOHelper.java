@@ -23,6 +23,19 @@ public class IOHelper {
         return ints;
     }
 
+    public static List<String> readWordsFile() {
+        String integersFile = "C:\\Users\\Zarkopafilis\\Desktop\\uni9\\uni9\\project-datastructs\\data\\integers.txt";
+
+        /* Read File */
+        List<String> words = new ArrayList<>();
+        try (BufferedReader br = Files.newBufferedReader(Paths.get(integersFile))) {
+            words = br.lines().collect(Collectors.toList());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return words;
+    }
+
     public static int scanInt() {
         return Integer.parseInt(new Scanner(System.in).nextLine());
     }

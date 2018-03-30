@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 import static me.zarkopafilis.ceid.IOHelper.readIntegersFile;
 import static me.zarkopafilis.ceid.IOHelper.scanInt;
 
-public class Main{
+public class UserSearches {
 
     static long time;
 
