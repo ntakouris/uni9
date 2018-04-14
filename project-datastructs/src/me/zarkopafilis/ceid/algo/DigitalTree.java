@@ -15,7 +15,7 @@ public class DigitalTree {
         TrieNode curr = root;
 
         while (i < str.length()) {
-            if (curr.children.get(str.substring(i, i + 1)) != null) {
+            if (curr.children.containsKey(str.substring(i, i + 1))) {
                 curr = curr.children.get(str.substring(i, i + 1));
                 i++;
             } else {
@@ -38,7 +38,7 @@ public class DigitalTree {
         TrieNode curr = root;
 
         while (i < str.length()) {
-            if (curr.children.get(str.substring(i, i + 1)) == null) {
+            if (!curr.children.containsKey(str.substring(i, i + 1))) {
                 return false;
             }
             curr = curr.children.get(str.substring(i, i + 1));
@@ -46,6 +46,38 @@ public class DigitalTree {
         }
 
         return curr.data != null && curr.data.equals(str);
+    }
+
+    public void delete(String str) {
+        int len = str.length();
+        if (len == 0) {
+            return;
+        }
+
+        deleteHelper(root, str, 0);
+    }
+
+    private boolean deleteHelper(TrieNode node, String str, int level) {
+        if (node != null) {
+            int len = str.length();
+
+            if (level == len) {
+                node.data = null;
+                if (node.children != null) {
+                    return node.children.isEmpty();
+                }
+            } else {
+                String k = str.substring(level, level + 1);
+                if (deleteHelper(node.children.get(k), str, level + 1)) {
+                    node.children.remove(k);
+
+                    return (node.data == null && node.children.isEmpty());
+                }
+
+            }
+        }
+
+        return false;
     }
 
     private class TrieNode {
