@@ -32,13 +32,19 @@ public class DigitalTreeOperations {
 
             switch (n){
                 case 0:
+                    time = System.nanoTime();
                     System.out.println(dt.search(w) ? "exists" : "not found");
+                    System.out.println("Took: " + (System.nanoTime() - time) + " ns");
                     break;
                 case 1:
+                    time = System.nanoTime();
                     dt.insert(w);
+                    System.out.println("Took: " + (System.nanoTime() - time) + " ns");
                     break;
                 case 2:
+                    time = System.nanoTime();
                     dt.delete(w);
+                    System.out.println("Took: " + (System.nanoTime() - time) + " ns");
                     break;
             }
 

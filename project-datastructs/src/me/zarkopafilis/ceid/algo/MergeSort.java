@@ -18,7 +18,7 @@ public class MergeSort {
 
     private void merge(int middle) {
         if (array[middle - 1] < array[middle]) {
-            return; //sorted
+            return;
         }
         int[] copy = new int[high - low];
 
@@ -44,7 +44,6 @@ public class MergeSort {
     private void mergeSort(int l, int h) {
         if (l < h) {
             int m = (l + h) / 2;
-            /* Sort first and second halves */
             mergeSort(l, m);
             mergeSort(m + 1, h);
             merge(l, m, h);
@@ -56,20 +55,17 @@ public class MergeSort {
         int n1 = m - l + 1;
         int n2 = r - m;
 
-        /* create temp arrays */
         int[] l_arr = new int[n1];
         int[] h_arr = new int[n2];
 
-        /* Copy data to temp arrays*/
         for (i = 0; i < n1; i++)
             l_arr[i] = array[l + i];
         for (j = 0; j < n2; j++)
             h_arr[j] = array[m + 1 + j];
 
-        /* Merge the temp arrays back into array[] */
-        i = 0; // Initial index of first subarray
-        j = 0; // Initial index of second subarray
-        k = l; // Initial index of merged subarray
+        i = 0;
+        j = 0;
+        k = l;
         while (i < n1 && j < n2) {
             if (l_arr[i] <= h_arr[j]) {
                 array[k] = l_arr[i];

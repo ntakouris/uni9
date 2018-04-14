@@ -23,7 +23,7 @@ public class UserSearches {
         mergeSort.start();
         System.out.println("Time took to merge sort: " + (System.nanoTime() - time) + " ns");
 
-        /* Check result validity */
+        /* Validity check */
         Stream.of(mergeSort.getArray()).reduce((last, curr) -> {
             if (last > curr) {
                 throw new AssertionError("MergeSort did not sort elements");
