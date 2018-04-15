@@ -5,6 +5,7 @@ import me.zarkopafilis.ceid.algo.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static me.zarkopafilis.ceid.IOHelper.readIntegersFile;
 
@@ -24,7 +25,6 @@ public class Benchmarks {
         RedBlackTree tree = new RedBlackTree();
         time = System.nanoTime();
         for (Integer i : ints) {
-            System.out.println("Inserting: " + i);
             tree.insert(i);
         }
         System.out.println("Time took to construct red black tree: " + (System.nanoTime() - time) + " ns");
@@ -51,31 +51,29 @@ public class Benchmarks {
         System.out.println();
         System.out.println();
 
-        return;
-//
-//        Integer[] arr = new Integer[ints.size()];
-//        ints.toArray(arr);
-//        MergeSort mergeSort = new MergeSort(arr, 0, ints.size() - 1);
-//
-//        time = System.nanoTime();
-//        mergeSort.start();
-//        System.out.println("Time took to merge sort: " + (System.nanoTime() - time) + " ns");
-//
-//        /* Check result validity */
-//        Stream.of(mergeSort.getArray()).reduce((last, curr) -> {
-//            if (last > curr) {
-//                throw new AssertionError("MergeSort did not sort elements");
-//            }
-//            return curr;
-//        });
-//
-//        SearchAlgo linear = new LinearSearch();
-//        SearchAlgo binary = new BinarySearch();
-//        SearchAlgo interp = new InterpolationSearch();
-//
-//        benchmark("Linear Search", linear, mergeSort.getArray());
-//        benchmark("Binary Search", binary, mergeSort.getArray());
-//        benchmark("Interpolation Search", interp, mergeSort.getArray());
+        Integer[] arr = new Integer[ints.size()];
+        ints.toArray(arr);
+        MergeSort mergeSort = new MergeSort(arr, 0, ints.size() - 1);
+
+        time = System.nanoTime();
+        mergeSort.start();
+        System.out.println("Time took to merge sort: " + (System.nanoTime() - time) + " ns");
+
+        /* Check result validity */
+        Stream.of(mergeSort.getArray()).reduce((last, curr) -> {
+            if (last > curr) {
+                throw new AssertionError("MergeSort did not sort elements");
+            }
+            return curr;
+        });
+
+        SearchAlgo linear = new LinearSearch();
+        SearchAlgo binary = new BinarySearch();
+        SearchAlgo interp = new InterpolationSearch();
+
+        benchmark("Linear Search", linear, mergeSort.getArray());
+        benchmark("Binary Search", binary, mergeSort.getArray());
+        benchmark("Interpolation Search", interp, mergeSort.getArray());
     }
 
     private static synchronized void benchmark(String searchName, SearchAlgo alg, Integer[] array) {

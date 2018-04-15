@@ -55,7 +55,7 @@ public class RedBlackTree {
             uncle(n).color = BLACK;
             grandparent(n).color = RED;
             insertRepair(grandparent(n)); // ?: n.parent
-        } else {
+        } else if(uncle(n) == null){
             Node p = n.parent;
             Node g = grandparent(n);
 
@@ -116,28 +116,28 @@ public class RedBlackTree {
         return p.left;
     }
 
-    private void leftRotate(Node x) {
-        Node y = x.right;
-        if (y == null) {
+    private void leftRotate(Node n) {
+        Node nnew = n.right;
+        if (nnew == null) {
             return;
         }
 
-        x.right = y.left;
-        y.left = x;
-        y.parent = x.parent;
-        x.parent = y;
+        n.right = nnew.left;
+        nnew.left = n;
+        nnew.parent = n.parent;
+        n.parent = nnew;
     }
 
-    private void rightRotate(Node x) {
-        Node y = x.left;
-        if (y == null) {
+    private void rightRotate(Node n) {
+        Node nnew = n.left;
+        if (nnew == null) {
             return;
         }
 
-        x.left = y.right;
-        y.right = x;
-        y.parent = x.parent;
-        x.parent = y;
+        n.left = nnew.right;
+        nnew.right = n;
+        nnew.parent = n.parent;
+        n.parent = nnew;
     }
 
     public int search(int x) {
@@ -153,7 +153,8 @@ public class RedBlackTree {
                 return hops;
             }
         }
-        return NOT_FOUND;
+
+        return hops;
     }
 
     class Node {
