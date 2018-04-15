@@ -24,7 +24,7 @@ public class Benchmarks {
         RedBlackTree tree = new RedBlackTree();
         time = System.nanoTime();
         for (Integer i : ints) {
-            System.out.println(i);
+            System.out.println("Inserting: " + i);
             tree.insert(i);
         }
         System.out.println("Time took to construct red black tree: " + (System.nanoTime() - time) + " ns");

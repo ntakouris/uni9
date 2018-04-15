@@ -3,8 +3,7 @@ package me.zarkopafilis.ceid.algo;
 
 import static me.zarkopafilis.ceid.algo.SearchAlgo.NOT_FOUND;
 
-/* As of http://software.ucv.ro/~mburicea/lab8ASD.pdf*/
-public class RedBlackTree{
+public class RedBlackTree {
 
     protected static final boolean BLACK = false;
     protected static final boolean RED = true;
@@ -13,29 +12,132 @@ public class RedBlackTree{
 
     public void insert(int n) {
         Node z = new Node(n);
-        Node y = null;
-        Node x = root;
 
-        while (x != null) {
-            y = x;
-            if(z.val < x.val){
-                x = x.left;
-            }else{
-                x = x.right;
+        insertHelper(root, z);
+        insertRepair(z);
+
+        root = z;
+        while (root.parent != null) {
+            root = root.parent;
+        }
+    }
+
+    private void insertHelper(Node root, Node n) {
+        if (root != null && n.val < root.val) {
+            if (root.left != null) {
+                insertHelper(root.left, n);
+                return;
+            } else {
+                root.left = n;
+            }
+        } else if (root != null) {
+            if (root.right != null) {
+                insertHelper(root.right, n);
+                return;
+            } else {
+                root.right = n;
             }
         }
 
-        z.parent = y;
-        if (y == null) {
-            root = z;
-        }else if(z.val < y.val){
-            y.left = z;
-        }else{
-            y.right = z;
+        n.parent = root;
+        n.left = null;
+        n.right = null;
+        n.color = RED;
+    }
+
+    private void insertRepair(Node n) {
+        if (n.parent == null) {
+            n.color = BLACK;
+        } else if (n.parent.color == BLACK) {
+            return;
+        } else if (uncle(n) != null && uncle(n).color == RED) {
+            n.parent.color = BLACK;
+            uncle(n).color = BLACK;
+            grandparent(n).color = RED;
+            insertRepair(grandparent(n)); // ?: n.parent
+        } else {
+            Node p = n.parent;
+            Node g = grandparent(n);
+
+            if (g.left != null && n == g.left.right) {
+                leftRotate(p);
+                n = n.left;
+            } else if (g.right != null && n == g.right.left) {
+                rightRotate(p);
+                n = n.right;
+            }
+            /////////////////
+            p = n.parent;
+            g = grandparent(n);
+
+            if (n == p.left) {
+                rightRotate(g);
+            }else{
+                leftRotate(g);
+            }
+
+            p.color = BLACK;
+            g.color = RED;
+        }
+    }
+
+    private Node uncle(Node n) {
+        Node p = n.parent;
+        if (p == null) {
+            return null;
         }
 
-        z.color = RED;
-        insertFixup(z);
+        Node g = grandparent(n);
+        if (g == null) {
+            return null;
+        }
+
+        return sibling(p);
+    }
+
+    private Node grandparent(Node n) {
+        Node p = n.parent;
+        if (n.parent == null) {
+            return null;
+        }
+
+        return p.parent;
+    }
+
+    private Node sibling(Node n) {
+        Node p = n.parent;
+        if (p == null) {
+            return null;
+        }
+        if (n == p.left) {
+            return p.right;
+        }
+
+        return p.left;
+    }
+
+    private void leftRotate(Node x) {
+        Node y = x.right;
+        if (y == null) {
+            return;
+        }
+
+        x.right = y.left;
+        y.left = x;
+        y.parent = x.parent;
+        x.parent = y;
+    }
+
+    private void rightRotate(Node x) {
+        Node y = x.left;
+        if (y == null) {
+            return;
+        }
+
+        x.left = y.right;
+        y.right = x;
+        y.parent = x.parent;
+        x.parent = y;
     }
 
     public int search(int x) {
@@ -43,9 +145,9 @@ public class RedBlackTree{
         int hops = -1;
         while (s != null) {
             hops++;
-            if(x < s.val){
+            if (x < s.val) {
                 s = s.left;
-            }else if(x > s.val){
+            } else if (x > s.val) {
                 s = s.right;
             } else if (x == s.val) {
                 return hops;
@@ -54,67 +156,7 @@ public class RedBlackTree{
         return NOT_FOUND;
     }
 
-    private void insertFixup(Node z) {
-        while (z.parent != null && z.parent.color == RED) {
-            if (z.parent == z.parent.parent.left) {
-                Node y = z.parent.parent.right;
-                if (y.color == RED) {
-                    z.parent.color = BLACK;
-                    y.color = BLACK;
-                    z.parent.parent.color = RED;
-                    z = z.parent.parent;
-                } else if (z == z.parent.right) {
-                    z = z.parent;
-                    leftRotate(z);
-                    z.parent.color = BLACK;
-                    z.parent.parent.color = RED;
-                    rightRotate(z);
-                }else{
-                    z = z.parent;
-                    rightRotate(z);
-                    z.parent.color = BLACK;
-                    z.parent.parent.color = RED;
-                    leftRotate(z);
-                }
-            }
-        }
-
-        root.color = BLACK;
-    }
-
-    private void leftRotate(Node x){
-        Node y = x.right;
-        x.right = y.left;
-        y.left.parent = x;
-        y.parent = x.parent;
-
-        if (x.parent == null) {
-            root = y;
-        } else if (x == x.parent.left) {
-            x.parent.right = y;
-        }else{
-            x.parent.left = y;
-        }
-
-        y.left = x;
-        x.parent = y;
-    }
-
-    private void rightRotate(Node x){
-        Node y = x.left;
-        x.left = y.right;
-        y.right.parent = x;
-        y.parent = x.parent;
-        if (x.parent == null) {
-            root = y;
-        } else if (x == x.parent.right) {
-            x.parent.right = y;
-        }else{
-            x.parent.left = y;
-        }
-    }
-
-    class Node{
+    class Node {
         int val;
         Node parent, left, right;
         boolean color;
@@ -124,6 +166,14 @@ public class RedBlackTree{
 
         public Node(int val) {
             this.val = val;
+        }
+
+        @Override
+        public String toString() {
+            return "Node{" +
+                    "val=" + val +
+                    ", color=" + (color == BLACK ? "BLACK" : "RED") +
+                    '}';
         }
     }
 }
