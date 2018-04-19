@@ -7,9 +7,7 @@ public class InterpolationSearch implements SearchAlgo{
         int r = from.length - 1;
         while (l <= r && x >= from[l] && x <= from[r])
         {
-            int i = (l + (((r-l) /
-                                (from[r]-from[l]))*(x - from[l])));
-
+            int i = l + ((x - from[l]) / (from[r] - from[l]));
             int t = from[i];
 
             if(t < x){

@@ -16,19 +16,16 @@ public class Benchmarks {
     static long mean;
 
     /* Test Integer set for benchmarks */
-    static Collection<Integer> elements;
+    static Collection<Integer> elements = readIntegersFile();
 
     public static void main(String[] args) {
-        populateElements();
-        List<Integer> ints = readIntegersFile();
 
         RedBlackTree tree = new RedBlackTree();
         time = System.nanoTime();
-        for (Integer i : ints) {
+        for (Integer i : elements) {
             tree.insert(i);
         }
         System.out.println("Time took to construct red black tree: " + (System.nanoTime() - time) + " ns");
-
         for (Integer integer : elements) {
             time = System.nanoTime();
             tree.search(integer);
@@ -51,9 +48,9 @@ public class Benchmarks {
         System.out.println();
         System.out.println();
 
-        Integer[] arr = new Integer[ints.size()];
-        ints.toArray(arr);
-        MergeSort mergeSort = new MergeSort(arr, 0, ints.size() - 1);
+        Integer[] arr = new Integer[elements.size()];
+        elements.toArray(arr);
+        MergeSort mergeSort = new MergeSort(arr, 0, elements.size() - 1);
 
         time = System.nanoTime();
         mergeSort.start();
