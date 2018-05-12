@@ -1,0 +1,124 @@
+MICRO
+
+c BOOTSTRAP
+m00 00000 000 000 111 000 011 pcpc pcpc 00 0111010111
+m01 00000 000 000 000 000 001 0000 0000 00 0010000000
+
+c LOAD R, $K
+// K -> MDR 
+// $K -> MDR 
+// $K -> B 
+// R -> MDR
+// R -> FB
+// FB + 0 -> R
+
+c STORE R, $K
+// R -> MDR 
+// R -> B 
+// K -> MDR
+// K -> MAR
+// B1 + 0 -> FB
+// FB + 0 -> MWE~
+
+c ADD R1, $K
+// K -> MDR 
+// $K -> MDR 
+// $K -> B 
+// R -> MDR
+// R -> FB
+// B + FB -> R
+c SUB R1, $K
+// K -> MDR 
+// $K -> MDR 
+// $K -> B 
+// R -> MDR
+// R -> FB
+// FB - B -> R
+c ADD R1, R2
+// R2 -> MDR 
+// R2 -> FB
+// FB + 0 -> B  
+// R1 -> MDR
+// R1 -> FB
+// FB + B -> R1
+
+c SHL R
+// R to MDR
+// R to feedback reg
+mxx 00000 000 000 100 000 110 1001 1010 00 0010011111
+c NEXTINSTR
+mxx 00000 000 000 101 000 011 pcpc pcpc 01 0111011110
+mxx 00000 000 000 000 000 001 0000 0000 00 0010000000
+
+c DEC R 
+// R to MDR
+// R to feedback reg
+mxx 00000 000 000 101 000 011 1010 1010 01 0110111110
+c NEXTINSTR
+mxx 00000 000 000 101 000 011 pcpc pcpc 01 0111011110
+mxx 00000 000 000 000 000 001 0000 0000 00 0010000000
+
+c HALT
+mxx 00000 010 000 000 000 000 0000 0000 00 0111011110
+
+MAPPER
+
+c LOAD R, $K
+m00
+c STORE R, $K
+m01
+c ADD R1, $K
+m02
+c SUB R1, $K
+m03
+c ADD R1, R2
+m04
+c SHL R
+m05
+c DEC R 
+m06
+c HALT
+m07
+
+MAIN
+
+c LOAD r2, $X
+m00 00
+m01 $X 
+m02 02
+c ADD r2, $Y
+m03 02
+m04 $Y
+m05 02
+c DEC r2
+m06 06
+m07 02
+c LOAD r1, $Z
+m08 00
+m09 $Z
+m0a 01
+c ADD r1, r2
+m0b 04
+m0c 02
+m0d 01
+c SHL r1
+m0e 05
+m0f 01
+c SHL r1
+m10 05 
+m11 01
+c SHL r2
+m12 05
+m13 02
+c ADD r1, r2
+m14 04
+m15 02
+m16 01
+c STORE r1, $W
+m17 01
+m18 01
+m19 $W
+c HALT
+m1a 07
+
+c -DATA-
