@@ -1,4 +1,4 @@
-!#/bin/bash
+#!/bin/bash
 
 #No args -> AM
 if [ $# -eq 0 ]
@@ -8,53 +8,25 @@ if [ $# -eq 0 ]
 fi
 
 #parameter parsing
-while getopts ":f:id:-firstnames:-lastnames:-born-since:-born-until:-socialmedia:-edit:" opt
+while getopts ":f:i:s:" opt
    do
      case $opt in
         f ) file=$OPTARG;;
-        id ) id=$OPTARG;;
-        -firstnames ) firstnames=true;;
-        -lastnames ) lastnames=true;;
-        -born-since ) bornsince=$OPTARG;;
-        -born-until ) bornultil=$OPTARG;;
-        -socialmedia ) socialmedia=$OPTARG;;
-        #figure how to parse <column> <value>
-        -edit ) editid=$OPTARG;;
+        i ) id=$OPTARG;;
+        s ) socialmedia='true';;
      esac
 done
+socialmedia='asdf'
+echo $socialmedia
 
 # id|lastName|firstName|gender|birthday|joinDate|IP|browserUsed|socialmedia
 
-#if id -> $first $last $date
-if [[ ! ${id+x} ]]; then
-    # echo line that starts with given id
-    line=$(awk '/^$id/p' $file) 
-    #split into array by '|' delimeter
-    cols=(${line//|/ })
-    echo "${cols[2]} ${cols[1]} ${cols[5]}"
-    exit
-fi
+columnsep='\t'
 
-#if lastnames/firstnames -> discrete names alphabetically sorted line-line
-if [[ ! ${firstnames+x} ]]; then
-    # replace first *|*| with '' and last |*|*|*|*|*|* to only print firstname
-    sed -n -e 's/^.*|*|: //p' $file | sed -n -e 's/$.|*|*|*|*|*|*: //p' | sort | uniq
-    exit
-fi
-
-if [[ ! ${lastnames+x} ]]; then
-
-    exit
-fi
 
 # only lines that match
 if [[ ! ${bornsince+x} ]] && [[ ! ${bornuntil+x} ]]; then
     # sed-out date, keep
-    exit
-fi
-
-if [[ ! ${socialmedia+x} ]]; then
-    sed -n -e 's/^.*|: //p' $file | sort | uniq -c | awk '{ print $2, $1 }' # yeet
     exit
 fi
 
@@ -63,6 +35,37 @@ if [[ ! ${editid+x} ]] && [[ ! ${editcolumn+x} ]] && [[ ! ${editvalue+x} ]]; the
     exit
 fi
 
-#if only f -> all contents except lines that start with #
-# "print lines that do not start with '#' "
-cat $file | grep "^[^#]"
+#ignore lines that start with #
+#keep only column of last name
+#sort alphabetically, print only discrete rows
+if [[ ! ${lastnames+x} ]]; then
+    grep "^[^#]" $file |  awk -F "$columnsep" '{print $2}' | sort | uniq
+    exit
+fi
+
+#ignore lines that start with #
+#keep only column of first name
+#sort alphabetically, print only discrete rows
+if [[ ! ${firstnames+x} ]]; then
+    grep "^[^#]" $file |  awk -F "$columnsep" '{print $3}' | sort | uniq
+    exit
+fi
+
+#ignore lines that start with #
+#keep only last column (social media name)
+#sort alphabetically
+#group by social media name and count
+# uniq -c needs output columns swap to match $name $count specification
+if [[ ${socialmedia+x} ]]; then
+    grep "^[^#]" $file |  awk -F "$columnsep" '{print $9}' | sort | uniq -c | awk '{ print $2 " " $1 }'
+    exit
+fi
+
+# echo line that starts with given id | split with column separator and print correct columns with spacing
+if [[ ${id+x} ]]; then
+    awk "/^$id/" $file | awk -F "$columnsep" '{print $3 " " $2 " " $6}'
+    exit
+fi
+
+#print lines that do not start with '#'
+grep "^[^#]" $file
