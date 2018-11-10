@@ -26,7 +26,7 @@ while [ -n "$1" ]; do # iterates every option until no option left
  
     --firstnames) firstnames='true';;
     
-    --lastnames) lastnames'true';;
+    --lastnames) lastnames='true';;
     
     --born-since) bornsince="$2"
             shift;;
@@ -44,24 +44,51 @@ while [ -n "$1" ]; do # iterates every option until no option left
     shift # next parameter for parsing
 done
 
+#we parse from $dateformat to %Y-%m-%d which is easily comparable with operators within bash
+
 #ignore lines that start with #
 #compare birthdates and if check pass, print line (5th column is birthday date)
 if [[ ${bornsince+x} ]] && [[ ${bornuntil+x} ]]; then
+    bornsince = $(echo $bornsince | awk -F '/' '{print $3"-"$2"-"$1}')
+    bornuntil = $(echo $bornuntil | awk -F '/' '{print $3"-"$2"-"$1}')
+
     awk -F "$columnsep" -v dateA="$bornsince" -v dateB="$bornuntil" '{if (FNR>1 && dateA<=$5 && dateB>=$5) {print}}' $file
     exit
 fi
 
 if [[ ${bornsince+x} ]]; then
-    awk -F "$columnsep" -v dateA="$bornsince" '{if (FNR>1 && dateA<=$5) {print}}' $file
+    bornsince = $(echo $bornsince | awk -F '/' '{print $3"-"$2"-"$1}')
+    awk -F "$columnsep" -v dateA="$bornsince" '{if (FNR>1 && dateA<= system("bash echo "$5"| awk -F '/' '{print $3"-"$2"-"$1}'") ) {print}}' $file
     exit
 fi
 
 if [[ ${bornuntil+x} ]]; then
+    bornuntil = $(echo $bornuntil | awk -F '/' '{print $3"-"$2"-"$1}')
     awk -F "$columnsep" -v dateB="$bornuntil" '{if (FNR>1 && dateB>=$5) {print}}' $file
     exit
 fi
 
+# id|lastName|firstName|gender|birthday|joinDate|IP|browserUsed|socialmedia
+#map editcolumn to position in column to replace with
+#replace in-file with sed on the line that starts with specified id
 if [[ ${editid+x} ]] && [[ ${editcolumn+x} ]] && [[ ${editvalue+x} ]]; then
+    case $editcolumn in
+        "id") pos=1 ;;
+        "lastName") pos=2 ;;
+        "firstName") pos=3 ;;
+        "gender") pos=4;;
+        "birthday") pos=5;;
+        "joinDate") pos=6;;
+        "IP") pos=7;;
+        "browserUsed") pos=8;;
+        "socialmedia") pos=9;;
+    esac
+
+    if [[ ! ${pos+x} ]] then
+        exit
+    fi
+
+    sed -i "/^$id/{s/ [^$columnsep]*/ $editvalue/$pos}" $file
 
     exit
 fi
