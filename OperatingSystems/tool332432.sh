@@ -112,7 +112,13 @@ if [[ ${editid+x} ]] && [[ ${editcolumn+x} ]] && [[ ${editvalue+x} ]]; then
         exit
     fi
 
-    sed "/^$id/{s/[a-zA-Z0-9./-]$columnsep]/$editvalue/$pos}" $file
+    #edge case because it doesnt start with '$columnsep' -- so when replacing dont prepend $columnsep
+    if [[ $pos -eq 1]] then
+        
+        exit
+    fi
+
+    sed "/^$id/[$columnsep]*[a-zA-Z0-9./\-:+]*/$columnsep$editvalue/$pos}" $file
 
     exit
 fi
