@@ -52,19 +52,43 @@ if [[ ${bornsince+x} ]] && [[ ${bornuntil+x} ]]; then
     bornsince = $(echo $bornsince | awk -F '/' '{print $3"-"$2"-"$1}')
     bornuntil = $(echo $bornuntil | awk -F '/' '{print $3"-"$2"-"$1}')
 
-    awk -F "$columnsep" -v dateA="$bornsince" -v dateB="$bornuntil" '{if (FNR>1 && dateA<=$5 && dateB>=$5) {print}}' $file
+    awk \
+        -F "$columnsep" \
+        -v dateA="$bornsince" -v dateB="$bornuntil" \
+        '(FNR > 1 && dateA <= cnv_date($5) && dateB >= cnv_date($5) )
+        function cnv_date(date,    a) {
+            split(date, a, "/")
+            return a[3] "-" a[2] "-" a[1]
+        }' $file
     exit
 fi
 
 if [[ ${bornsince+x} ]]; then
     bornsince = $(echo $bornsince | awk -F '/' '{print $3"-"$2"-"$1}')
-    awk -F "$columnsep" -v dateA="$bornsince" '{if (FNR>1 && dateA<= system("bash echo "$5"| awk -F '/' '{print $3"-"$2"-"$1}'") ) {print}}' $file
+
+    awk \
+        -F "$columnsep" \
+        -v dateA="$bornsince" \
+        '(FNR > 1 && dateA <= cnv_date($5) )
+        function cnv_date(date,    a) {
+            split(date, a, "/")
+            return a[3] "-" a[2] "-" a[1]
+        }' $file
+
     exit
 fi
 
 if [[ ${bornuntil+x} ]]; then
     bornuntil = $(echo $bornuntil | awk -F '/' '{print $3"-"$2"-"$1}')
-    awk -F "$columnsep" -v dateB="$bornuntil" '{if (FNR>1 && dateB>=$5) {print}}' $file
+
+     awk \
+        -F "$columnsep" \
+        -v dateB "$bornuntil" \
+        '(FNR > 1 && dateB >= cnv_date($5) )
+        function cnv_date(date,    a) {
+            split(date, a, "/")
+            return a[3] "-" a[2] "-" a[1]
+        }' $file
     exit
 fi
 
@@ -88,7 +112,7 @@ if [[ ${editid+x} ]] && [[ ${editcolumn+x} ]] && [[ ${editvalue+x} ]]; then
         exit
     fi
 
-    sed -i "/^$id/{s/ [^$columnsep]*/ $editvalue/$pos}" $file
+    sed "/^$id/{s/[a-zA-Z0-9./-]$columnsep]/$editvalue/$pos}" $file
 
     exit
 fi
