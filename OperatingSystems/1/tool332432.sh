@@ -9,7 +9,7 @@ fi
 
 # id|lastName|firstName|gender|birthday|joinDate|IP|browserUsed|socialmedia
 
-columnsep='\t'
+columnsep='|'
 dateformat='%d/%m/%y'
 
 #parameter parsing
@@ -43,6 +43,37 @@ while [ -n "$1" ]; do # iterates every option until no option left
     esac
     shift # next parameter for parsing
 done
+
+# id|lastName|firstName|gender|birthday|joinDate|IP|browserUsed|socialmedia
+#map editcolumn to position in column to replace with
+#replace in-file with sed on the line that starts with specified id
+if [[ ${editid+x} ]] && [[ ${editcolumn+x} ]] && [[ ${editvalue+x} ]]; then
+    case $editcolumn in
+        "id") pos=1 ;;
+        "lastName") pos=2 ;;
+        "firstName") pos=3 ;;
+        "gender") pos=4;;
+        "birthday") pos=5;;
+        "joinDate") pos=6;;
+        "IP") pos=7;;
+        "browserUsed") pos=8;;
+        "socialmedia") pos=9;;
+    esac
+
+    if [[ ! ${pos+x} ]] then
+        exit
+    fi
+
+    #edge case because it doesnt start with '$columnsep' -- so when replacing dont prepend $columnsep
+    if [[ $pos -eq 1]] then
+        
+        exit
+    fi
+
+    sed "/^$id/[$columnsep]*[a-zA-Z0-9./\-:+]+/$columnsep$editvalue/$pos}" $file
+
+    exit
+fi
 
 #we parse from $dateformat to %Y-%m-%d which is easily comparable with operators within bash
 
@@ -89,37 +120,6 @@ if [[ ${bornuntil+x} ]]; then
             split(date, a, "/")
             return a[3] "-" a[2] "-" a[1]
         }' $file
-    exit
-fi
-
-# id|lastName|firstName|gender|birthday|joinDate|IP|browserUsed|socialmedia
-#map editcolumn to position in column to replace with
-#replace in-file with sed on the line that starts with specified id
-if [[ ${editid+x} ]] && [[ ${editcolumn+x} ]] && [[ ${editvalue+x} ]]; then
-    case $editcolumn in
-        "id") pos=1 ;;
-        "lastName") pos=2 ;;
-        "firstName") pos=3 ;;
-        "gender") pos=4;;
-        "birthday") pos=5;;
-        "joinDate") pos=6;;
-        "IP") pos=7;;
-        "browserUsed") pos=8;;
-        "socialmedia") pos=9;;
-    esac
-
-    if [[ ! ${pos+x} ]] then
-        exit
-    fi
-
-    #edge case because it doesnt start with '$columnsep' -- so when replacing dont prepend $columnsep
-    if [[ $pos -eq 1]] then
-        
-        exit
-    fi
-
-    sed "/^$id/[$columnsep]*[a-zA-Z0-9./\-:+]*/$columnsep$editvalue/$pos}" $file
-
     exit
 fi
 
