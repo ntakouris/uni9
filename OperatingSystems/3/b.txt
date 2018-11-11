@@ -1,0 +1,27 @@
+# Insertion
+
+binary semaphore mutex2 = 1;
+
+while(TRUE){
+    down(mutex2); // Only 1 Insert at a time
+
+    down(mutex); // Block search to read correct count value
+        bool isSearching = count > 0;
+    up(mutex);
+
+    up(mutex2); // Re-enter insert after search gets some duty time
+
+    if(isSearching){ /* Deletion is already blocked */
+        down(mutex2);
+            Insert_Book();
+        up(mutex2);
+    }else{ /* No searches, have to block library */
+        down(library);
+            down(mutex2);
+                Insert_Book();
+            up(mutex2);
+        up(library);
+    }
+
+    up(mutex2);
+}

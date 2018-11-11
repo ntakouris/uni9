@@ -1,7 +1,7 @@
 # i
 "Y" | "XY" | "YX"
 
-# Always "XY"
+# ii) Always "XY"
 
 shared int x,y;
 var s1, s2 : semaphore;

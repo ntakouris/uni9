@@ -1,0 +1,27 @@
+//Shared Code
+var s12, s13, s21, s23, s31, s32 : semaphore; 
+s12 := 0; s13 := 0; s21 := 0; s23 := 0; s31 := 0; s32 := 0;
+
+//Student 1
+Search_Book();
+
+up(s12); up(s13);
+down(s21); down(s31);
+
+Study_Project();
+
+//Student 2
+Search_Book();
+
+up(s21); up(s23);
+down(s12); down(s32);
+
+Study_Project();
+
+//Student 3
+Search_Book();
+
+up(s31); up(s32);
+down(s13); down(s23);
+
+Study_Project();
