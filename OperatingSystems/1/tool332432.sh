@@ -66,11 +66,11 @@ if [[ ${editid+x} ]] && [[ ${editcolumn+x} ]] && [[ ${editvalue+x} ]]; then
 
     #edge case because it doesnt start with '$columnsep' -- so when replacing dont prepend $columnsep
     if [[ $pos -eq 1]] then
-        
+        sed "/^$id/s/[$columnsep]*[^$columnsep]*/$editvalue/$pos"
         exit
     fi
 
-    sed "/^$id/[$columnsep]*[a-zA-Z0-9./\-:+]+/$columnsep$editvalue/$pos}" $file
+    sed "/^$id/s/[$columnsep]*[^$columnsep]*/$columnsep$editvalue/$pos"
 
     exit
 fi
