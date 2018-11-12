@@ -28,26 +28,26 @@ while [ -n "$1" ]; do # iterates every option until no option left
     
     --lastnames) lastnames='true';;
     
-    --born-since) bornsince="$2"
+    --born-since) bornsince="$2";
             shift;;
     
     --born-until) bornuntil="$2"
             shift;;
             
-    --edit) editid="$2"
-            editcolumn="$3"
-            editvalue="$4"
+    --edit) editid="$2";
+            editcolumn="$3";
+            editvalue="$4";
             shift 3;;
  
     *) echo "Option $1 not recognized";;
     esac
-    shift # next parameter for parsing
+    shift; # next parameter for parsing
 done
 
 # id|lastName|firstName|gender|birthday|joinDate|IP|browserUsed|socialmedia
 #map editcolumn to position in column to replace with
 #replace in-file with sed on the line that starts with specified id
-if [[ ${editid+x} ]] && [[ ${editcolumn+x} ]] && [[ ${editvalue+x} ]]; then
+if [ ${editid+x} ] && [ ${editcolumn+x} ] && [ ${editvalue+x} ]; then
     case $editcolumn in
         "id") pos=1 ;;
         "lastName") pos=2 ;;
@@ -60,17 +60,17 @@ if [[ ${editid+x} ]] && [[ ${editcolumn+x} ]] && [[ ${editvalue+x} ]]; then
         "socialmedia") pos=9;;
     esac
 
-    if [[ ! ${pos+x} ]] then
+    if [ ! ${pos+x} ]; then
         exit
     fi
 
     #edge case because it doesnt start with '$columnsep' -- so when replacing dont prepend $columnsep
-    if [[ $pos -eq 1]] then
-        sed "/^$id/s/[$columnsep]*[^$columnsep]*/$editvalue/$pos"
+    if [ $pos = 1 ]; then
+        sed -i '' "/^$id/s/[$columnsep]*[^$columnsep]*/$editvalue/$pos" "$file"
         exit
     fi
 
-    sed "/^$id/s/[$columnsep]*[^$columnsep]*/$columnsep$editvalue/$pos"
+    sed -i '' "/^$id/s/[$columnsep]*[^$columnsep]*/$columnsep$editvalue/$pos" "$file"
 
     exit
 fi
@@ -79,9 +79,9 @@ fi
 
 #ignore lines that start with #
 #compare birthdates and if check pass, print line (5th column is birthday date)
-if [[ ${bornsince+x} ]] && [[ ${bornuntil+x} ]]; then
-    bornsince = $(echo $bornsince | awk -F '/' '{print $3"-"$2"-"$1}')
-    bornuntil = $(echo $bornuntil | awk -F '/' '{print $3"-"$2"-"$1}')
+if [ ${bornsince+x} ] && [ ${bornuntil+x} ]; then
+    bornsince=$(echo $bornsince | awk -F '/' '{print $3"-"$2"-"$1}')
+    bornuntil=$(echo $bornuntil | awk -F '/' '{print $3"-"$2"-"$1}')
 
     awk \
         -F "$columnsep" \
@@ -94,8 +94,8 @@ if [[ ${bornsince+x} ]] && [[ ${bornuntil+x} ]]; then
     exit
 fi
 
-if [[ ${bornsince+x} ]]; then
-    bornsince = $(echo $bornsince | awk -F '/' '{print $3"-"$2"-"$1}')
+if [ ${bornsince+x} ]; then
+    bornsince=$(echo $bornsince | awk -F '/' '{print $3"-"$2"-"$1}')
 
     awk \
         -F "$columnsep" \
@@ -109,12 +109,12 @@ if [[ ${bornsince+x} ]]; then
     exit
 fi
 
-if [[ ${bornuntil+x} ]]; then
-    bornuntil = $(echo $bornuntil | awk -F '/' '{print $3"-"$2"-"$1}')
+if [ ${bornuntil+x} ]; then
+    bornuntil=$(echo $bornuntil | awk -F '/' '{print $3"-"$2"-"$1}')
 
      awk \
         -F "$columnsep" \
-        -v dateB "$bornuntil" \
+        -v dateB="$bornuntil" \
         '(FNR > 1 && dateB >= cnv_date($5) )
         function cnv_date(date,    a) {
             split(date, a, "/")
@@ -126,7 +126,7 @@ fi
 #ignore lines that start with #
 #keep only column of last name
 #sort alphabetically, print only discrete rows
-if [[ ${lastnames+x} ]]; then
+if [ ${lastnames+x} ]; then
     grep "^[^#]" $file |  awk -F "$columnsep" '{print $2}' | sort | uniq
     exit
 fi
@@ -134,7 +134,7 @@ fi
 #ignore lines that start with #
 #keep only column of first name
 #sort alphabetically, print only discrete rows
-if [[ ${firstnames+x} ]]; then
+if [ ${firstnames+x} ]; then
     grep "^[^#]" $file |  awk -F "$columnsep" '{print $3}' | sort | uniq
     exit
 fi
@@ -144,13 +144,13 @@ fi
 #sort alphabetically
 #group by social media name and count
 # uniq -c needs output columns swap to match $name $count specification
-if [[ ${socialmedia+x} ]]; then
+if [ ${socialmedia+x} ]; then
     grep "^[^#]" $file |  awk -F "$columnsep" '{print $9}' | sort | uniq -c | awk '{ print $2 " " $1 }'
     exit
 fi
 
 # echo line that starts with given id | split with column separator and print correct columns with spacing
-if [[ ${id+x} ]]; then
+if [ ${id+x} ]; then
     awk "/^$id/" $file | awk -F "$columnsep" '{print $3 " " $2 " " $5}'
     exit
 fi
