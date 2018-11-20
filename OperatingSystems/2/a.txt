@@ -1,15 +1,15 @@
-# Precedence graph
-I1 --- > I4 -------------\
-                          |---- > I6 --- > I7
+# Precedence graph (Checked, Correct, More ASCII Art)
+I1 ----> I4 -------------\
+                          >---- > I6 --- > I7
 I2 ----\                 /
-        |-----> I5 -----/
+        >-----> I5 -----/
 I3 ----/
 
-# No semaphores
+# No semaphores (Checked, Fixed, Correct)
 begin
 
 cobegin
-    begin I4; I4; end;
+    begin I1; I4; end;
 
     begin
         cobegin
@@ -26,7 +26,7 @@ I6; I7;
 
 end;
 
-# With semaphores
+# With semaphores (Checked, Correct, Excellent! (#otheioskaulwse))
 //sem init
 var s14, s25, s35, s46, s56, s67 : semaphore; 
 
