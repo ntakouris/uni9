@@ -10,7 +10,6 @@ fi
 # id|lastName|firstName|gender|birthday|joinDate|IP|browserUsed|socialmedia
 
 columnsep='|'
-dateformat='%d/%m/%y'
 
 #parameter parsing
 while [ -n "$1" ]; do # iterates every option until no option left
@@ -50,13 +49,13 @@ done
 if [ ${editid+x} ] && [ ${editcolumn+x} ] && [ ${editvalue+x} ]; then
     case $editcolumn in
         "id") pos=1 ;;
-        "lastName") pos=2 ;;
-        "firstName") pos=3 ;;
+        "lastName" | "lastname") pos=2 ;;
+        "firstName" | "firstname") pos=3 ;;
         "gender") pos=4;;
         "birthday") pos=5;;
-        "joinDate") pos=6;;
-        "IP") pos=7;;
-        "browserUsed") pos=8;;
+        "joinDate" | "joindate") pos=6;;
+        "IP" | "ip") pos=7;;
+        "browserUsed" | "browserused") pos=8;;
         "socialmedia") pos=9;;
     esac
 
@@ -70,14 +69,13 @@ if [ ${editid+x} ] && [ ${editcolumn+x} ] && [ ${editvalue+x} ]; then
         exit
     fi
 
+    #  Match Nth position of *| regex and replace with target value
     sed -i '' "/^$editid/s/[$columnsep]*[^$columnsep]*/$columnsep$editvalue/$pos" "$file"
 
     exit
 fi
 
-#we parse from $dateformat to %Y-%m-%d which is easily comparable with operators within bash
-
-#ignore lines that start with #
+#ignores lines that start with #
 #compare birthdates and if check pass, print line (5th column is birthday date)
 if [ ${bornsince+x} ] && [ ${bornuntil+x} ]; then
     awk \
@@ -92,7 +90,6 @@ if [ ${bornsince+x} ]; then
         -F "$columnsep" \
         -v dateA="$bornsince" \
         '(FNR > 1 && dateA <= $5 )' $file
-
     exit
 fi
 
@@ -104,7 +101,7 @@ if [ ${bornuntil+x} ]; then
     exit
 fi
 
-#ignore lines that start with #
+#ignores lines that start with #
 #keep only column of last name
 #sort alphabetically, print only discrete rows
 if [ ${lastnames+x} ]; then
@@ -112,7 +109,7 @@ if [ ${lastnames+x} ]; then
     exit
 fi
 
-#ignore lines that start with #
+#ignores lines that start with #
 #keep only column of first name
 #sort alphabetically, print only discrete rows
 if [ ${firstnames+x} ]; then
