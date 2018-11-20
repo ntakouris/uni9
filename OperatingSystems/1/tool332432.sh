@@ -80,46 +80,27 @@ fi
 #ignore lines that start with #
 #compare birthdates and if check pass, print line (5th column is birthday date)
 if [ ${bornsince+x} ] && [ ${bornuntil+x} ]; then
-    bornsince=$(echo $bornsince | awk -F '/' '{print $3"-"$2"-"$1}')
-    bornuntil=$(echo $bornuntil | awk -F '/' '{print $3"-"$2"-"$1}')
-
     awk \
         -F "$columnsep" \
         -v dateA="$bornsince" -v dateB="$bornuntil" \
-        '(FNR > 1 && dateA <= cnv_date($5) && dateB >= cnv_date($5) )
-        function cnv_date(date,    a) {
-            split(date, a, "/")
-            return a[3] "-" a[2] "-" a[1]
-        }' $file
+        '(FNR > 1 && dateA <= $5 && dateB >= $5 )' $file
     exit
 fi
 
 if [ ${bornsince+x} ]; then
-    bornsince=$(echo $bornsince | awk -F '/' '{print $3"-"$2"-"$1}')
-
     awk \
         -F "$columnsep" \
         -v dateA="$bornsince" \
-        '(FNR > 1 && dateA <= cnv_date($5) )
-        function cnv_date(date,    a) {
-            split(date, a, "/")
-            return a[3] "-" a[2] "-" a[1]
-        }' $file
+        '(FNR > 1 && dateA <= $5 )' $file
 
     exit
 fi
 
 if [ ${bornuntil+x} ]; then
-    bornuntil=$(echo $bornuntil | awk -F '/' '{print $3"-"$2"-"$1}')
-
      awk \
         -F "$columnsep" \
         -v dateB="$bornuntil" \
-        '(FNR > 1 && dateB >= cnv_date($5) )
-        function cnv_date(date,    a) {
-            split(date, a, "/")
-            return a[3] "-" a[2] "-" a[1]
-        }' $file
+        '(FNR > 1 && dateB >= $5 )' $file
     exit
 fi
 
