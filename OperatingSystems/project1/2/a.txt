@@ -1,0 +1,50 @@
+# Precedence graph (Checked, Correct, More ASCII Art)
+I1 ----> I4 -------------\
+                          >---- > I6 --- > I7
+I2 ----\                 /
+        >-----> I5 -----/
+I3 ----/
+
+# No semaphores (Checked, Fixed, Correct)
+begin
+
+cobegin
+    begin I1; I4; end;
+
+    begin
+        cobegin
+            begin I2; end;
+            begin I3; end;
+        coend;
+
+        I5;
+    end;
+
+coend;
+
+I6; I7;
+
+end;
+
+# With semaphores (Checked, Correct, Excellent! (#otheioskaulwse))
+//sem init
+var s14, s25, s35, s46, s56, s67 : semaphore; 
+
+begin
+s14 := 0; s25 := 0; s35 := 0; s46 := 0; s56 := 0; s67 := 0;
+
+//parallel
+cobegin
+    begin I1; up(s14); end;
+    begin I2; up(s25); end;
+    begin I3; up(s35); end;
+
+    begin down(s14); I4; up(s46); end;
+    begin down(s25); down(s35); I5; up(s56); end;
+    
+    begin down(s46); I6; up(s67); end;
+    
+    begin down(s67); I7; end;
+coend;
+
+end;
