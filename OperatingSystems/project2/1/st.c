@@ -5,15 +5,24 @@
 #include <pthread.h> 
 #include <semaphore.h> 
 #include <string.h>
+#include <sys/mman.h>
 
 #define PROC_NUM 100
 
 sem_t * mutex; 
 
+static char * p;
+static int * cur_i;
 
 // MacOS supports only named semaphores
+/* Sometimes results do not get printed out, must run 2-3 times -- WTF*/
 int main(){
-    char * p = ""; // shared text
+    p = mmap(NULL, sizeof(char) * PROC_NUM, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); // shared text
+    cur_i = mmap(NULL, sizeof(* cur_i), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); // shared index
+
+    *cur_i = 0;
+
+    memset(p, 0, sizeof(char) * PROC_NUM);
 
     //Length of 'txt' should be equal to PROC_NUM
     const char txt[PROC_NUM] = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean m";
@@ -31,7 +40,7 @@ int main(){
 
     printf("Initialising nSeconds\n");
     for(int i = 0; i < PROC_NUM; i++){
-        nSeconds[i] = i; // % n for random 0 ~ n
+        nSeconds[i] = rand() % 6; // % n for random 0 ~ n
     }
 
     printf("Spawning children\n");
@@ -41,35 +50,13 @@ int main(){
         if(pid == 0){
             /* ==== */
                 sleep(nSeconds[i]);
-
                 const char target = txt[i]; // character to concat to *p
-
+                printf("%d      ", i);
                 sem_wait(mutex); 
-                char * pOld = p;
+                    printf("%s\n", p, *cur_i, target);
 
-                size_t len;
-                if(p == NULL){
-                    len = 0;
-                }else{
-                    len = strlen(p);
-                }
-
-                //Malloc new string and swap pointers
-                char * p2 = malloc(len + 1 + 1 ); /* one for extra char, one for trailing null/zero */
-
-                if(p != NULL){
-                    strcpy(p2, p);
-                }
-
-                p2[len] = txt[i];
-                p2[len + 1] = '\0';
-
-                printf("%s====\n", p2);
-
-                &p = &p2;
-
-                printf("%s----\n", *p);
-
+                    p[*cur_i] = target;
+                    *cur_i = *cur_i + 1;
                 sem_post(mutex); 
             /* ==== */
             return 0;
@@ -82,10 +69,12 @@ int main(){
 
     printf("\n");
 
-    printf("Concatenated string: %s\n", *p);
+    printf("Concatenated string: %s\n", p);
 
     sem_unlink("/mutex");
     sem_close(mutex); 
+
+    munmap(p, sizeof(char *));
 
     return 0;
 }
