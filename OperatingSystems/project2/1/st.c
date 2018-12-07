@@ -14,7 +14,6 @@ sem_t * mutex;
 static char * p;
 static int * cur_i;
 
-// MacOS supports only named semaphores
 /* Sometimes results do not get printed out, must run 2-3 times -- WTF*/
 int main(){
     p = mmap(NULL, sizeof(char) * PROC_NUM, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); // shared text
