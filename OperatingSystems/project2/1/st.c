@@ -40,7 +40,8 @@ int main(){
 
     printf("Initialising nSeconds\n");
     for(int i = 0; i < PROC_NUM; i++){
-        nSeconds[i] = rand() % 6; // % n for random 0 ~ n
+        nSeconds[i] = rand() % 6; // % n for random between 0 ~ n
+        // nSeconds[i] = i; // for easy fix
     }
 
     printf("Spawning children\n");
