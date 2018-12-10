@@ -53,7 +53,7 @@ int main(){
                 const char target = txt[i]; // character to concat to *p
                 printf("%d      ", i);
                 sem_wait(mutex); 
-                    printf("%s\n", p, *cur_i, target);
+                    printf("%s\n", p);
 
                     p[*cur_i] = target;
                     *cur_i = *cur_i + 1;

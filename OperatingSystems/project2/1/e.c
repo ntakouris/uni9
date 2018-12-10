@@ -7,7 +7,6 @@
 #include <string.h>
 #include <sys/mman.h>
 
-
 sem_t * s14, s24, s35, s45; 
 
 void p(int i){
@@ -58,16 +57,16 @@ int main(){
     }
 
     sem_unlink("/mutex14");
-    sem_close(mutex14); 
+    sem_close(s14); 
 
     sem_unlink("/mutex24");
-    sem_close(mutex24); 
+    sem_close(s24); 
 
     sem_unlink("/mutex35");
-    sem_close(mutex35); 
+    sem_close(s35); 
     
     sem_unlink("/mutex45");
-    sem_close(mutex45); 
+    sem_close(s45); 
 
     return 0;
 }
