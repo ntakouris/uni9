@@ -8,13 +8,15 @@
 #include <sys/mman.h>
 
 #define PROC_NUM 100
+//Length of 'txt' should be equal to PROC_NUM
+static const char txt[PROC_NUM] = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean m";
 
 sem_t * mutex; 
 
 static char * p;
 static int * cur_i;
 
-/* Sometimes results do not get printed out, must run 2-3 times -- WTF*/
+/* Sometimes results do not get printed out, must run 2-3 times*/
 int main(){
     p = mmap(NULL, sizeof(char) * PROC_NUM, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); // shared text
     cur_i = mmap(NULL, sizeof(* cur_i), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0); // shared index
@@ -22,9 +24,6 @@ int main(){
     *cur_i = 0;
 
     memset(p, 0, sizeof(char) * PROC_NUM);
-
-    //Length of 'txt' should be equal to PROC_NUM
-    const char txt[PROC_NUM] = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean m";
 
     /* 
     Η αλλαγή που χρειάζεται για να βγει σωστό κείμενο είναι να βάλουμε τους χρόνους nSeconds[index] να αυξάνονται όσο αυξάνεται και το index ώστε να
@@ -37,13 +36,14 @@ int main(){
 
     mutex = sem_open("/mutex", O_CREAT | O_EXCL, 0644, 0);
 
+    sem_post(mutex);
     printf("Initialising nSeconds\n");
     for(int i = 0; i < PROC_NUM; i++){
         nSeconds[i] = rand() % 6; // % n for random between 0 ~ n
         // nSeconds[i] = i; // for easy fix
     }
 
-    printf("Spawning children\n");
+    printf("Spawning children\n"); 
     for(int i = 0; i < PROC_NUM; i++){
         
         int pid = fork();
