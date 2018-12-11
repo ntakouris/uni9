@@ -4,11 +4,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-// 100 -> 0s (sorry)
-// 100000 -> 1s 
-// 1000000 -> 6s
-// On MacBook Pro 13.3" 2017
-#define PROC_NUM 1000000
+// 100     -> 0s (sorry)     | 0s (sorry)
+// 100000  -> 1s             | 6s
+// 1000000 -> 6s             | 59s
+// On MacBook Pro 13.3" 2017 | On Celeron N3350 2.4 GHz, Debian 9.6 (Native)
+#define PROC_NUM 100000
 
 // This is a bit more complex to have a bigger difference 
 // Without many processes
@@ -47,6 +47,7 @@ int main()
     printf("End time: %ld s\n", end);
 
     printf("Diff time: %ld s\n", (end - start));
+    printf("Average time: %0.9f s\n", (end - start)/(float)PROC_NUM);
 
     return 0;
 }
