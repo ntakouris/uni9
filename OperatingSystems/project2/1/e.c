@@ -7,13 +7,14 @@
 #include <string.h>
 #include <sys/mman.h>
 
-sem_t * s14, s24, s35, s45; 
+sem_t *s14, *s24, *s35, *s45; 
 
 void p(int i){
-    printf("Process: %d\n", (i+1));
+    char buf[64];
+    sprintf(buf, "echo Process %d", i+1);
+    system(buf);
 }
 
-// untested
 int main(){
     s14 = sem_open("/mutex14", O_CREAT | O_EXCL, 0644, 0);
     s24 = sem_open("/mutex24", O_CREAT | O_EXCL, 0644, 0);
