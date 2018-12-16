@@ -37,6 +37,16 @@ CREATE TABLE sections(
     CONSTRAINT SEC_PARENT FOREIGN KEY (parent) REFERENCES sections(title) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+INSERT INTO sections VALUES
+("Computer Engineering", "Computer Science, Informatics", NULL),
+("Software", "NOT Hadrdware", "Computer Engineering"),
+("Hardware", "NOT Software", "Computer Engineering"),
+("Web Apps", "REST APIs", "Software"),
+("Computer Vision", "Multiview Geometry and stuff", "Software"),
+("Logic Design", "Vergos :)", "Hardware"),
+("Quantum Computers", "1 - 0.5 - 0", "Hardware")
+;
+
 CREATE TABLE sections_per_company(
     company_afm char(9) NOT NULL, 
     section VARCHAR(25) NOT NULL,
@@ -44,4 +54,16 @@ CREATE TABLE sections_per_company(
     PRIMARY KEY(company_afm, section),
     CONSTRAINT SEC_PER_COMP_COMP FOREIGN KEY (company_afm) REFERENCES etaireia(AFM) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT SEC_PER_COMP_SEC FOREIGN KEY (section) REFERENCES sections(title) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE audit_logs(
+    id INT NOT NULL AUTO_INCREMENT,
+    username varchar(12) NOT NULL,
+    action_type varchar(25) NOT NULL,
+    happened_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    table_name VARCHAR(45) NOT NULL,
+    success TINYINT(1) NOT NULL,
+
+    PRIMARY KEY(id),
+    CONSTRAINT RECR_USER FOREIGN KEY (username) REFERENCES `user`(username) ON UPDATE CASCADE
 );
