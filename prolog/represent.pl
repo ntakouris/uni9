@@ -1,13 +1,14 @@
-father(giannis, pavlos)
-father(giannis, georgia)
+father(pavlos, giannis).
+father(pavlos, georgia).
 
-mother(eleni, maria)
-mother(eleni, petros)
+mother(eleni, maria).
+mother(eleni, petros).
+
+parent(X, Y) :- father(X, Y).
+parent(X, Y) :- mother(X, Y).
 
 /* X \= Y χρειάζεται για να μην ισχύει sigling(giannis, giannis) */
-sibling(X, Y) :- father(Somebody,X), father(Somebody,Y), X \= Y.
-sibling(X, Y) :- father(Somebody,X), mother(Somebody,Y), X \= Y.
-sibling(X, Y) :- mother(Somebody,X), father(Somebody,Y), X \= Y.
-sibling(X, Y) :- mother(Somebody,X), mother(Somebody,Y), X \= Y.
+sibling(X, Y) :- parent(Z,X), parent(Z,Y), X \= Y.
+
 
 ?- sibling(giannis, S)
