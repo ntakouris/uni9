@@ -114,3 +114,138 @@ BEGIN
     END IF;
 END //
 DELIMITER ;
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER cand_ins AFTER INSERT ON candidate
+FOR EACH ROW
+BEGIN 
+INSERT INTO audit_logs VALUES (NULL, username ,"insert", NOW(), 'candidate', 1);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER cand_upd AFTER UPDATE ON candidate
+FOR EACH ROW
+BEGIN 
+INSERT INTO audit_logs VALUES (NULL, username ,"update", NOW(), 'candidate', 1);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER cand_del AFTER DELETE ON candidate
+FOR EACH ROW
+BEGIN 
+INSERT INTO audit_logs VALUES (NULL, username ,"delete", NOW(), 'candidate', 1);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER rec_ins AFTER INSERT ON recruiter
+FOR EACH ROW
+BEGIN 
+INSERT INTO audit_logs VALUES (NULL, username,"insert", NOW(), 'recruiter', 1);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER rec_upd AFTER UPDATE ON recruiter
+FOR EACH ROW
+BEGIN 
+INSERT INTO audit_logs VALUES (NULL, username,"update", NOW(), 'recruiter', 1);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER rec_del AFTER DELETE ON recruiter
+FOR EACH ROW
+BEGIN 
+INSERT INTO audit_logs VALUES (NULL, username,"delete", NOW(), 'recruiter', 1);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER usr_ins AFTER INSERT ON user
+FOR EACH ROW
+BEGIN 
+INSERT INTO audit_logs VALUES (NULL, username,"insert", NOW(), 'user', 1);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER usr_upd AFTER UPDATE ON user
+FOR EACH ROW
+BEGIN 
+INSERT INTO audit_logs VALUES (NULL, username,"update", NOW(), 'user', 1);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER usr_del AFTER DELETE ON user
+FOR EACH ROW
+BEGIN 
+INSERT INTO audit_logs VALUES (NULL, username,"delete", NOW(), 'user', 1);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER job_ins AFTER INSERT ON job
+FOR EACH ROW
+BEGIN 
+INSERT INTO audit_logs VALUES (NULL, recruiter,"insert", NOW(), 'jos', 1);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER job_upd AFTER UPDATE ON job
+FOR EACH ROW
+BEGIN 
+INSERT INTO audit_logs VALUES (NULL, recruiter,"update", NOW(), 'jos', 1);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER job_del AFTER DELETE ON job
+FOR EACH ROW
+BEGIN 
+INSERT INTO audit_logs VALUES (NULL, recruiter,"delete", NOW(), 'jos', 1);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER et_ins AFTER INSERT ON etaireia
+FOR EACH ROW
+BEGIN 
+INSERT INTO audit_logs VALUES (NULL, USER(),"insert", NOW(), 'etaireia', 1);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER et_upd BEFORE UPDATE ON etaireia
+FOR EACH ROW
+BEGIN 
+SET NEW.AFM = OLD.AFM;
+SET NEW.DOY = OLD.DOY;
+SET NEW.name = OLD.name;
+INSERT INTO audit_logs VALUES (NULL, USER(),"update", NOW(), 'etaireia', 1);
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER et_del AFTER DELETE ON etaireia
+FOR EACH ROW
+BEGIN 
+INSERT INTO audit_logs VALUES (NULL, USER(),"delete", NOW(), 'etaireia', 1);
+END //
+DELIMITER ;
+
+
+DELIMITER //
+CREATE OR REPLACE TRIGGER prevent_application_del BEFORE DELETE ON applies
+    FOR EACH ROW
+    BEGIN
+    IF (SELECT submission_date from job WHERE job.id = job_id) < NOW() THEN
+    INSERT INTO audit_logs VALUES (NULL, cand_usrname ,"update", NOW(), 'candidate', 0);
+    raise_application_error(-20001,'Application can not be deleted; submission date has passed');
+    END IF;
+    END //
+DELIMITER ;

@@ -52,7 +52,7 @@ CREATE TABLE audit_logs(
     action_type varchar(25) NOT NULL,
     happened_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     table_name VARCHAR(45) NOT NULL,
-    success TINYINT(1) NOT NULL,
+    success INT(1) NOT NULL,
 
     PRIMARY KEY(id),
     CONSTRAINT RECR_USER FOREIGN KEY (username) REFERENCES `user`(username) ON UPDATE CASCADE
