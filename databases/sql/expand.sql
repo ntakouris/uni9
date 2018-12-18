@@ -7,25 +7,15 @@ CREATE TABLE interviews (
     target_job INT(4) NOT NULL,
     duration_hours INT(3) NOT NULL, 
     start_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    score TINYINT DEFAULT 0,
+    personality TINYINT DEFAULT 0,
+    education TINYINT DEFAULT 0,
+    experience TINYINT DEFAULT 0,
     comments VARCHAR(255),
 
     PRIMARY KEY(id),
     CONSTRAINT INTERV_RECR FOREIGN KEY (recruiter_name) REFERENCES recruiter(username) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT INTERV_JOB FOREIGN KEY (target_job) REFERENCES job(id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT INTERV_CAND FOREIGN KEY (cand_usrname) REFERENCES candidate(username) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
-CREATE TABLE applicant_scores(
-    cand_usrname VARCHAR(12) NOT NULL,
-    target_job INT(4) NOT NULL,
-    personality TINYINT DEFAULT 0,
-    education TINYINT DEFAULT 0,
-    experience TINYINT DEFAULT 0,
-
-    PRIMARY KEY(cand_usrname, target_job),
-    CONSTRAINT APPL_SCR_JOB FOREIGN KEY (target_job) REFERENCES job(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT APPL_SCR_CAND FOREIGN KEY (cand_usrname) REFERENCES candidate(username) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE sections(
