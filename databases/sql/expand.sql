@@ -55,5 +55,5 @@ CREATE TABLE audit_logs(
     success INT(1) NOT NULL,
 
     PRIMARY KEY(id),
-    CONSTRAINT RECR_USER FOREIGN KEY (username) REFERENCES `user`(username) ON UPDATE CASCADE
+    CONSTRAINT AUDIT_USER FOREIGN KEY (username) REFERENCES `user`(username) ON UPDATE CASCADE
 );

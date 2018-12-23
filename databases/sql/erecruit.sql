@@ -1,4 +1,3 @@
-drop database erecruit;
 create database erecruit;
 use erecruit;
 
