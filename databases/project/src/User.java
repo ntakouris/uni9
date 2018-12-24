@@ -1,4 +1,4 @@
 public class User {
-    String name;
-    String role;
+    public static String name;
+    public static String role;
 }

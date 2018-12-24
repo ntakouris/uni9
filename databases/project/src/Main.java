@@ -9,6 +9,8 @@ public class Main {
             e.printStackTrace();
         }
 
+        new Login();
+
         try {
             Database.conn.close();
         } catch (SQLException e) {
