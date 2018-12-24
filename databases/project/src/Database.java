@@ -1,7 +1,4 @@
-import dto.CandidateDto;
-import dto.PositionDto;
-import dto.ProjectDto;
-import dto.UserDto;
+import dto.*;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -75,5 +72,21 @@ public class Database {
 
     public static PositionDto[] loadSubmittedPositions(String name) {
         return null;
+    }
+
+    public static DegreeDto[] availableDegreesToAdd(String name){
+        return null;
+    }
+
+    public static HasDegreeDto[] loadHasDegreeFor(String name) {
+        return null;
+    }
+
+    public static void addHasDegree(String name, String title, String idryma, String year, String grade) {
+
+    }
+
+    public static void editHasDegree(String name, String title, String idryma, String year, String grade) {
+
     }
 }

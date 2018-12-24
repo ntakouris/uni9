@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 public class Candidate {
     public Candidate() {
-        showUserEditWindow();
+        Util.showUserEditWindow();
         showCandidateProfileEditWindow();
         showProjectsEditWindow();
         showEditDegreesWindow();
@@ -18,7 +18,94 @@ public class Candidate {
     }
 
     private void showEditDegreesWindow() {
+        var frame = new JFrame("Applications");
 
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.getContentPane().setLayout(new FlowLayout());
+
+        var list = new JList<>(Stream.of(Database.loadHasDegreeFor(User.name)).map(x -> x.title).toArray());
+
+        Function refresh = (Object nothing) -> {
+            DefaultListModel listModel = (DefaultListModel) list.getModel();
+            listModel.removeAllElements();
+
+            for(var dto : Database.loadHasDegreeFor(User.name)){
+                listModel.addElement(dto.title);
+            }
+            return true;
+        };
+
+        var addDegreeButton = new Button("Add Degree");
+
+        list.addListSelectionListener(e -> showEditDegreeWindow(refresh, (String) list.getSelectedValue()));
+
+        addDegreeButton.addActionListener(e -> showEditDegreeWindow(refresh, null));
+
+        frame.getContentPane().add(list);
+        frame.getContentPane().add(addDegreeButton);
+
+        frame.pack();
+
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+
+    private void showEditDegreeWindow(Function refresh, String title){
+        var frame = new JFrame("Add new degree");
+
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        frame.getContentPane().setLayout(new FlowLayout());
+
+        // list
+        JComboBox nameslist;
+        if (title == null) {
+            nameslist = new JComboBox(Stream.of(Database.availableDegreesToAdd(User.name)).map(x -> String.join(" ", new String[]{x.titlos, x.idryma})).toArray());
+        }else{
+            nameslist = new JComboBox(new String[]{title});
+        }
+
+        var etosfield = new JTextField("0");
+        var gradefield = new JTextField("5");
+
+        var btn = new JButton("Add degree");
+        var rmbtn = new JButton("Remove degree");
+        rmbtn.setVisible(title != null);
+
+        btn.addActionListener(e -> {
+            //TODO: check year, grade
+            String[] item = ((String)nameslist.getSelectedItem()).split(" ");
+
+            Database.addHasDegree(User.name, item[0], item[1], etosfield.getText(), gradefield.getText());
+
+            refresh.apply(null);
+            frame.dispose();
+        });
+
+        rmbtn.addActionListener(e -> {
+            if (title == null) {
+                return;
+            }
+
+            //TODO: Check year, grade
+            String[] item = title.split(" ");
+
+            Database.editHasDegree(User.name, item[0], item[1], etosfield.getText(), gradefield.getText());
+
+            refresh.apply(null);
+            frame.dispose();
+        });
+
+        frame.getContentPane().add(nameslist);
+        frame.getContentPane().add(etosfield);
+        frame.getContentPane().add(btn);
+        frame.getContentPane().add(rmbtn);
+
+        frame.pack();
+
+
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
     private void showApplicationWizard() {
@@ -268,60 +355,4 @@ public class Candidate {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    private void showUserEditWindow() {
-        var frame = new JFrame("Edit user info");
-
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        frame.getContentPane().setLayout(new FlowLayout());
-
-        var unamefield = new JTextField("Username",12);
-        unamefield.setEditable(false);
-        ((AbstractDocument)unamefield.getDocument()).setDocumentFilter(new LimitDocumentFilter(12));
-
-        var pwfield = new JTextField("passw",10);
-        ((AbstractDocument)pwfield.getDocument()).setDocumentFilter(new LimitDocumentFilter(10));
-
-        var namefield = new JTextField("name", 25);
-        ((AbstractDocument)pwfield.getDocument()).setDocumentFilter(new LimitDocumentFilter(25));
-
-        var surnamefield = new JTextField("name", 35);
-        ((AbstractDocument)pwfield.getDocument()).setDocumentFilter(new LimitDocumentFilter(35));
-
-        var datefield = new JTextField("date", 10);
-        ((AbstractDocument)pwfield.getDocument()).setDocumentFilter(new LimitDocumentFilter(10));
-
-        var emailfield = new JTextField("email@somewhere.com", 30);
-        ((AbstractDocument)pwfield.getDocument()).setDocumentFilter(new LimitDocumentFilter(30));
-
-        var btn = new Button("Update user info");
-
-        btn.addActionListener(e -> {
-            //TODO: check mail and date
-            Database.updateProfile(User.name, pwfield.getText(), namefield.getText(), surnamefield.getText(), datefield.getText(), emailfield.getText());
-        });
-
-        frame.getContentPane().add(unamefield);
-        frame.getContentPane().add(pwfield);
-        frame.getContentPane().add(namefield);
-        frame.getContentPane().add(surnamefield);
-        frame.getContentPane().add(datefield);
-        frame.getContentPane().add(emailfield);
-
-        frame.getContentPane().add(btn);
-
-        frame.pack();
-
-        var dto = Database.loadUser(User.name);
-
-        unamefield.setText(dto.username);
-        pwfield.setText(dto.password);
-        namefield.setText(dto.name);
-        surnamefield.setText(dto.surname);
-        datefield.setText(dto.reg_date);
-        emailfield.setText(dto.email);
-
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    }
 }
