@@ -1,14 +1,10 @@
-import dto.ProjectDto;
+import dto.PositionDto;
 import util.LimitDocumentFilter;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.text.AbstractDocument;
 import javax.xml.crypto.Data;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -17,6 +13,129 @@ public class Candidate {
         showUserEditWindow();
         showCandidateProfileEditWindow();
         showProjectsEditWindow();
+        showEditDegreesWindow();
+        showApplicationWizard();
+    }
+
+    private void showEditDegreesWindow() {
+
+    }
+
+    private void showApplicationWizard() {
+        var frame = new JFrame("Applications");
+
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.getContentPane().setLayout(new FlowLayout());
+
+        var viewOpenPositionsBtn = new JButton("View positions to applyForJob");
+        var editSubmittedApplicationsBtn = new JButton("View and edit submitted applications");
+
+        viewOpenPositionsBtn.addActionListener(e -> {
+            showPositions(x -> Database.loadOpenPositions(User.name));
+        });
+
+        editSubmittedApplicationsBtn.addActionListener(e -> {
+            showPositions(x -> Database.loadSubmittedPositions(User.name));
+        });
+
+        frame.getContentPane().add(viewOpenPositionsBtn);
+        frame.getContentPane().add(editSubmittedApplicationsBtn);
+
+        frame.pack();
+
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+
+    private void showPositions(Function<Object, PositionDto[]> source){
+        var frame = new JFrame("Apply for new position");
+
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.getContentPane().setLayout(new FlowLayout());
+
+        var list = new JList<>(Stream.of(source.apply(null)).map(x -> x.position).toArray());
+
+        Function refresh = (Object nothing) -> {
+            DefaultListModel listModel = (DefaultListModel) list.getModel();
+            listModel.removeAllElements();
+
+            for(var dto : source.apply(null)){
+                listModel.addElement(dto.position);
+            }
+            return true;
+        };
+
+        var addProjectButton = new Button("Add project");
+
+        list.addListSelectionListener(e -> showPositionDetail((String) list.getSelectedValue(), refresh));
+
+        addProjectButton.addActionListener(e -> showProjectAddWindow(refresh));
+
+        frame.getContentPane().add(list);
+        frame.getContentPane().add(addProjectButton);
+
+        frame.pack();
+
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+
+    private void showPositionDetail(String id, Function refresh){
+        var frame = new JFrame("Position details");
+
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        frame.getContentPane().setLayout(new FlowLayout());
+
+        var positionfield = new JTextField("descriptions",40);
+
+        var salaryfield = new JTextField("10000",200);
+
+        var edrafield = new JTextField("edra", 45);
+
+        var rankfield = new JTextField("", 20);
+
+        var statusfield = new JTextField("status", 50);
+        //TODO: Add status of application based on dates
+
+        var canRevokeApplication = Database.canCandidateRemoveApplication(User.name, id);
+
+        var btn = new JButton(canRevokeApplication ? "Remove application" : "Apply now");
+
+        btn.addActionListener(e -> {
+            if (canRevokeApplication) {
+                Database.removeApplicationForJob(User.name, id);
+            }else{
+                Database.applyForJob(User.name, id);
+            }
+
+            refresh.apply(null);
+            frame.dispose();
+        });
+
+        frame.getContentPane().add(positionfield);
+        frame.getContentPane().add(salaryfield);
+        frame.getContentPane().add(edrafield);
+        frame.getContentPane().add(rankfield);
+        frame.getContentPane().add(statusfield);
+        frame.getContentPane().add(btn);
+
+        frame.pack();
+
+        var dto = Database.loadOpenPosition(id);
+
+        positionfield.setText(String.valueOf(dto.position));
+        salaryfield.setText(String.valueOf(dto.salary));
+        edrafield.setText(dto.edra);
+
+        if(dto.rank != -1){
+            rankfield.setText(String.format("Your rank is %d out of %d candidates", dto.rank, dto.totalcands));
+        }
+
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+
     }
 
     private void showProjectsEditWindow(){
@@ -79,7 +198,7 @@ public class Candidate {
             if(url == null){
                 Database.addProject(User.name, numfield.getText(), descrfield.getText(), urlfield.getText());
             }else{
-                Database.updateProject(User.name, url, numfield.getText(), descrfield.getText(), urlfield.getText())
+                Database.updateProject(User.name, url, numfield.getText(), descrfield.getText(), urlfield.getText());
             }
 
             refresh.apply(null);

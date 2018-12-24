@@ -1,4 +1,5 @@
 import dto.CandidateDto;
+import dto.PositionDto;
 import dto.ProjectDto;
 import dto.UserDto;
 
@@ -50,5 +51,29 @@ public class Database {
     }
 
     public static void updateProject(String uname, String url, String num, String desc, String newurl) {
+    }
+
+    public static PositionDto[] loadOpenPositions(String uname) {
+        return null;
+    }
+
+    public static void applyForJob(String name, String jobPosId) {
+
+    }
+
+    public static PositionDto loadOpenPosition(String jobId) {
+        return null;
+    }
+
+    public static boolean canCandidateRemoveApplication(String name, String jobid) {
+        return false;
+    }
+
+    public static void removeApplicationForJob(String name, String jobid) {
+
+    }
+
+    public static PositionDto[] loadSubmittedPositions(String name) {
+        return null;
     }
 }
