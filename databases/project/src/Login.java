@@ -7,7 +7,7 @@ import java.awt.*;
 public class Login {
 
     public Login(){
-        var frame = new JFrame("FrameDemo");
+        var frame = new JFrame("Login");
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 

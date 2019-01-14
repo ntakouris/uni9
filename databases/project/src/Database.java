@@ -414,7 +414,6 @@ public class Database {
     }
 
     public static PositionDto[] loadSubmittedPositions(String name) {
-
         return null;
     }
 
