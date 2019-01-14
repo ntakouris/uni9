@@ -1,13 +1,13 @@
-DELIMITER // ;
+DELIMITER //
 CREATE PROCEDURE CANDIDATES_FOR
 (IN j_id int(4))
 BEGIN
     DECLARE uname VARCHAR(12);
 
     DECLARE iid INT;
-    DECLARE per TINYINT;
-    DECLARE ed TINYINT;
-    DECLARE exp TINYINT;
+    DECLARE personality TINYINT;
+    DECLARE education TINYINT;
+    DECLARE experience TINYINT;
 
     DECLARE reason VARCHAR(100) DEFAULT "";
     DECLARE bad_candidate INT DEFAULT FALSE;
@@ -30,36 +30,36 @@ BEGIN
     SELECT id, per, ed, exp INTO iid, personality, education, experience
     FROM interviews 
     WHERE target_job = j_id AND cand_usrname = uname 
-    AND (personality = 0 OR education = 0, OR experience = 0) LIMIT 1;
+    AND (personality = 0 OR education = 0 OR experience = 0) LIMIT 1;
 
-    IF iid IS NOT NULL
+    IF iid IS NOT NULL THEN
 
-    SET bad_candidate = FALSE;
+    SET bad_candidate = 0;
     SET reason = "";
 
     IF personality = 0 THEN
     SET reason = CONCAT(reason, "Failed the interview");
-    SET bad_candidate = TRUE;
+    SET bad_candidate = 1;
     END IF;
 
     IF education = 0 THEN
     SET reason = CONCAT(reason, "Inadequate education");
-    SET bad_candidate = TRUE;
+    SET bad_candidate = 1;
     END IF;
 
     IF exp = 0 THEN
     SET reason = CONCAT(reason, "No prior experience");
-    SET bad_candidate = TRUE;
+    SET bad_candidate = 1;
     END IF;
 
-    IF bad_candidate THEN
+    IF bad_candidate = 1 THEN
     SELECT uname, reason;
     ELSE
 
-    SELECT cand_usrname, (AVG(interviews.personality)+SUM(interviews.education)+SUM(interviews.experience))
-    FROM applies WHERE job_id = j_id
+    SELECT cand_usrname, (AVG(interviews.personality) + SUM(interviews.education) + SUM(interviews.experience))
+    FROM applies
     INNER JOIN interviews ON 
-    (applies.job_id = interviews.target_job AND applies.cand_usrname = interviews.cand_usrname)
+    (applies.job_id = j_id AND applies.job_id = interviews.target_job AND applies.cand_usrname = interviews.cand_usrname)
     GROUP BY cand_usrname
     ORDER BY (AVG(interviews.personality)+SUM(interviews.education)+SUM(interviews.experience)) DESC;
     END IF;
@@ -71,7 +71,7 @@ END //
 DELIMITER ;
 
 
-DELIMITER // ;
+DELIMITER //
 CREATE PROCEDURE BEST_CANDIDATES
 (IN j_id int(4))
 BEGIN
@@ -98,7 +98,7 @@ BEGIN
     WHERE target_job = j_id AND cand_usrname = uname;
 
     IF id IS NULL THEN
-    not_all_applicants_are_validated = TRUE;
+    SET not_all_applicants_are_validated = TRUE;
     LEAVE cand_loop;
     END IF;
 
@@ -115,15 +115,15 @@ BEGIN
 END //
 DELIMITER ;
 
-DELIMITER // ;
-CREATE TRIGGER cand_ins AFTER INSERT ON candidate
+DELIMITER //
+CREATE TRIGGER erecruit.cand_ins AFTER INSERT ON candidate
 FOR EACH ROW
 BEGIN 
 INSERT INTO audit_logs VALUES (NULL, username ,"insert", NOW(), 'candidate', 1);
 END //
 DELIMITER ;
 
-DELIMITER // ;
+DELIMITER //
 CREATE TRIGGER cand_upd AFTER UPDATE ON candidate
 FOR EACH ROW
 BEGIN 
@@ -131,7 +131,7 @@ INSERT INTO audit_logs VALUES (NULL, username ,"update", NOW(), 'candidate', 1);
 END //
 DELIMITER ;
 
-DELIMITER // ;
+DELIMITER //
 CREATE TRIGGER cand_del AFTER DELETE ON candidate
 FOR EACH ROW
 BEGIN 
@@ -139,7 +139,7 @@ INSERT INTO audit_logs VALUES (NULL, username ,"delete", NOW(), 'candidate', 1);
 END //
 DELIMITER ;
 
-DELIMITER // ;
+DELIMITER //
 CREATE TRIGGER rec_ins AFTER INSERT ON recruiter
 FOR EACH ROW
 BEGIN 
@@ -147,7 +147,7 @@ INSERT INTO audit_logs VALUES (NULL, username,"insert", NOW(), 'recruiter', 1);
 END //
 DELIMITER ;
 
-DELIMITER // ;
+DELIMITER //
 CREATE TRIGGER rec_upd AFTER UPDATE ON recruiter
 FOR EACH ROW
 BEGIN 
@@ -155,7 +155,7 @@ INSERT INTO audit_logs VALUES (NULL, username,"update", NOW(), 'recruiter', 1);
 END //
 DELIMITER ;
 
-DELIMITER // ;
+DELIMITER //
 CREATE TRIGGER rec_del AFTER DELETE ON recruiter
 FOR EACH ROW
 BEGIN 
@@ -163,7 +163,7 @@ INSERT INTO audit_logs VALUES (NULL, username,"delete", NOW(), 'recruiter', 1);
 END //
 DELIMITER ;
 
-DELIMITER // ;
+DELIMITER //
 CREATE TRIGGER usr_ins AFTER INSERT ON user
 FOR EACH ROW
 BEGIN 
@@ -171,7 +171,7 @@ INSERT INTO audit_logs VALUES (NULL, username,"insert", NOW(), 'user', 1);
 END //
 DELIMITER ;
 
-DELIMITER // ;
+DELIMITER //
 CREATE TRIGGER usr_upd AFTER UPDATE ON user
 FOR EACH ROW
 BEGIN 
@@ -179,7 +179,7 @@ INSERT INTO audit_logs VALUES (NULL, username,"update", NOW(), 'user', 1);
 END //
 DELIMITER ;
 
-DELIMITER // ;
+DELIMITER //
 CREATE TRIGGER usr_del AFTER DELETE ON user
 FOR EACH ROW
 BEGIN 
@@ -187,7 +187,7 @@ INSERT INTO audit_logs VALUES (NULL, username,"delete", NOW(), 'user', 1);
 END //
 DELIMITER ;
 
-DELIMITER // ;
+DELIMITER //
 CREATE TRIGGER job_ins AFTER INSERT ON job
 FOR EACH ROW
 BEGIN 
@@ -195,7 +195,7 @@ INSERT INTO audit_logs VALUES (NULL, recruiter,"insert", NOW(), 'jos', 1);
 END //
 DELIMITER ;
 
-DELIMITER // ;
+DELIMITER //
 CREATE TRIGGER job_upd AFTER UPDATE ON job
 FOR EACH ROW
 BEGIN 
@@ -203,7 +203,7 @@ INSERT INTO audit_logs VALUES (NULL, recruiter,"update", NOW(), 'jos', 1);
 END //
 DELIMITER ;
 
-DELIMITER // ;
+DELIMITER //
 CREATE TRIGGER job_del AFTER DELETE ON job
 FOR EACH ROW
 BEGIN 
@@ -211,7 +211,7 @@ INSERT INTO audit_logs VALUES (NULL, recruiter,"delete", NOW(), 'jos', 1);
 END //
 DELIMITER ;
 
-DELIMITER // ;
+DELIMITER //
 CREATE TRIGGER et_ins AFTER INSERT ON etaireia
 FOR EACH ROW
 BEGIN 
@@ -219,7 +219,7 @@ INSERT INTO audit_logs VALUES (NULL, USER(),"insert", NOW(), 'etaireia', 1);
 END //
 DELIMITER ;
 
-DELIMITER // ;
+DELIMITER //
 CREATE TRIGGER et_upd BEFORE UPDATE ON etaireia
 FOR EACH ROW
 BEGIN 
@@ -230,7 +230,7 @@ INSERT INTO audit_logs VALUES (NULL, USER(),"update", NOW(), 'etaireia', 1);
 END //
 DELIMITER ;
 
-DELIMITER // ;
+DELIMITER //
 CREATE TRIGGER et_del AFTER DELETE ON etaireia
 FOR EACH ROW
 BEGIN 
@@ -239,7 +239,7 @@ END //
 DELIMITER ;
 
 
-DELIMITER // ;
+DELIMITER //
 CREATE TRIGGER prevent_application_del BEFORE DELETE ON applies
     FOR EACH ROW
     BEGIN
