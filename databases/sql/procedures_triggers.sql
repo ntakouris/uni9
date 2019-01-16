@@ -1,18 +1,16 @@
+DROP PROCEDURE IF EXISTS CANDIDATES_FOR;
 DELIMITER //
-CREATE PROCEDURE CANDIDATES_FOR
-(IN j_id int(4))
+CREATE PROCEDURE CANDIDATES_FOR (IN j_id int(4))
 BEGIN
     DECLARE uname VARCHAR(12);
-
     DECLARE iid INT;
-    DECLARE personality TINYINT;
-    DECLARE education TINYINT;
-    DECLARE experience TINYINT;
-
+    DECLARE pers TINYINT;
+    DECLARE edu TINYINT;
+    DECLARE ex TINYINT;
     DECLARE reason VARCHAR(100) DEFAULT "";
     DECLARE bad_candidate INT DEFAULT FALSE;
-
     DECLARE done INT DEFAULT FALSE;
+    
     DECLARE crsr_cand CURSOR FOR 
     SELECT cand_usrname FROM applies WHERE job_id = j_id; 
 
@@ -27,7 +25,7 @@ BEGIN
     LEAVE cand_loop;
     END IF;
     
-    SELECT id, per, ed, exp INTO iid, personality, education, experience
+    SELECT id, personality, education, experience INTO iid, pers, edu, ex
     FROM interviews 
     WHERE target_job = j_id AND cand_usrname = uname 
     AND (personality = 0 OR education = 0 OR experience = 0) LIMIT 1;
@@ -70,47 +68,62 @@ BEGIN
 END //
 DELIMITER ;
 
-
+DROP PROCEDURE IF EXISTS BEST_CANDIDATES;
 DELIMITER //
 CREATE PROCEDURE BEST_CANDIDATES
 (IN j_id int(4))
 BEGIN
     DECLARE uname VARCHAR(12);
     DECLARE iid INT;
-
-    DECLARE done INT DEFAULT FALSE;
+    DECLARE done_cand INT DEFAULT FALSE;
+    DECLARE done_iid INT DEFAULT FALSE;
     DECLARE not_all_applicants_are_validated INT DEFAULT FALSE;
+    
     DECLARE crsr_cand CURSOR FOR 
     SELECT cand_usrname FROM applies WHERE job_id = j_id; 
-
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
-
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done_cand=TRUE;
+        
     OPEN crsr_cand;
-
-    cand_loop: LOOP
+    
+    DECLARE crsr_iid CURSOR FOR 
+    SELECT id FROM interviews 
+    WHERE target_job = j_id AND cand_usrname = uname;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done_iid = TRUE;
+    
+    cand_loop: CANDLOOP
     FETCH crsr_cand INTO uname;
-
-    IF done THEN
-    LEAVE cand_loop;
+    
+    OPEN crsr_iid;
+    
+    iid_loop: IIDLOOP
+    FETCH crsr_iid INTO iid;
+    
+    IF done_iid THEN
+    LEAVE iid_loop;
     END IF;
     
-    SELECT id INTO iid FROM interviews 
-    WHERE target_job = j_id AND cand_usrname = uname;
-
-    IF id IS NULL THEN
+    CALL CANDIDATES_FOR(j_id);
+    
+    END IIDLOOP
+    
+    IF iid IS NULL THEN
     SET not_all_applicants_are_validated = TRUE;
     LEAVE cand_loop;
     END IF;
-
-    END LOOP;
+    
+    IF done_cand THEN
+    LEAVE cand_loop;
+    END IF;
+    
+    END CANDLOOP;
     CLOSE crsr_cand;
-
+    
     IF not_all_applicants_are_validated THEN
     SELECT "Not all applicants are validated/ranked with interview";
     ELSE
-
+    
     CALL CANDIDATES_FOR(j_id);
-
+    
     END IF;
 END //
 DELIMITER ;
