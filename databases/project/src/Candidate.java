@@ -12,7 +12,7 @@ public class Candidate {
     public Candidate() {
         Util.showUserEditWindow();
         showCandidateProfileEditWindow();
-//        showProjectsEditWindow();
+        showProjectsEditWindow();
 //        showEditDegreesWindow();
 //        showApplicationWizard();
     }
@@ -231,15 +231,12 @@ public class Candidate {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setLayout(new FlowLayout());
 
-        var list = new JList<>(Stream.of(Database.loadProjectsOf(User.name)).map(x -> x.url).toArray());
+        var list = new JList<>(Database.loadProjectsOf(User.name).stream().map(x -> x.url).toArray());
 
         Function refresh = (Object nothing) -> {
-            DefaultListModel listModel = (DefaultListModel) list.getModel();
-            listModel.removeAllElements();
+            list.removeAll();
 
-            for(var dto : Database.loadProjectsOf(User.name)){
-                listModel.addElement(dto.url);
-            }
+            list.setListData(Database.loadProjectsOf(User.name).stream().map(x -> x.url).toArray());
             return true;
         };
 
@@ -254,6 +251,7 @@ public class Candidate {
 
         frame.pack();
 
+        frame.setSize(800, 600);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
@@ -272,8 +270,8 @@ public class Candidate {
         var numfield = new JTextField("0",1);
         ((AbstractDocument)numfield.getDocument()).setDocumentFilter(new LimitDocumentFilter(1));
 
-
-        var descrfield = new JTextField("descr",200);
+        var descrfield = new TextArea();
+        descrfield.setText("descr");
 
         var urlfield = new JTextField("url", 35);
         ((AbstractDocument)urlfield.getDocument()).setDocumentFilter(new LimitDocumentFilter(60));

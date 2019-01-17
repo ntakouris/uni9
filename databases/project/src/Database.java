@@ -177,8 +177,39 @@ public class Database {
         }
     }
 
-    public static ProjectDto[] loadProjectsOf(String username) {
-        return null;
+    public static List<ProjectDto> loadProjectsOf(String username) {
+        Statement stmt = null;
+
+        List<ProjectDto> list = new ArrayList<>();
+        try {
+            stmt = conn.createStatement();
+            String sql;
+            sql = "SELECT * FROM project WHERE candid='" + username + "'";
+            ResultSet rs = stmt.executeQuery(sql);
+
+            while (rs.next()) {
+                ProjectDto dto = new ProjectDto();
+
+                dto.url = rs.getString("url");
+                dto.num = rs.getInt("num");
+                dto.desc = rs.getString("descr");
+
+                list.add(dto);
+            }
+            rs.close();
+            stmt.close();
+        } catch (Exception se) {
+            se.printStackTrace();
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException se2) {
+            }
+        }
+
+        return list;
     }
 
     public static ProjectDto loadProjectFor(String username, String url) {
@@ -361,7 +392,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "UPDATE project SET url='" + newurl + "', num=" + num + ", descr='" + desc + "' WHERE uname='" + uname + "' AND url='" + url + "'";
+            sql = "UPDATE project SET url='" + newurl + "', num=" + num + ", descr='" + desc + "' WHERE candid='" + uname + "' AND url='" + url + "'";
             stmt.executeUpdate(sql);
             stmt.close();
         } catch (Exception se) {
