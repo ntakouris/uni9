@@ -26,7 +26,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "SELECT * FROM user WHERE username=" + username + " AND password=" + password;
+            sql = "SELECT * FROM `user` WHERE username='" + username + "' AND `password`='" + password + "'";
             ResultSet rs = stmt.executeQuery(sql);
 
             while (rs.next()) {
@@ -35,6 +35,7 @@ public class Database {
             rs.close();
             stmt.close();
         } catch (Exception se) {
+            found = false;
             se.printStackTrace();
         } finally {
             try {
@@ -59,7 +60,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "SELECT * FROM candidate WHERE username=" + username;
+            sql = "SELECT * FROM candidate WHERE username='" + username + "'";
             ResultSet rs = stmt.executeQuery(sql);
 
             while (rs.next()) {
@@ -88,7 +89,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "SELECT * FROM recruiter WHERE username=" + username;
+            sql = "SELECT * FROM recruiter WHERE username='" + username + "'";
             ResultSet rs = stmt.executeQuery(sql);
 
             while (rs.next()) {
@@ -130,7 +131,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "SELECT * FROM user WHERE username=" + username;
+            sql = "SELECT * FROM `user` WHERE username='" + username + "'";
             ResultSet rs = stmt.executeQuery(sql);
 
             while (rs.next()) {
@@ -157,7 +158,23 @@ public class Database {
     }
 
     public static void updateProfile(String uname, String pw, String name, String surname, String date, String mail) {
-
+        Statement stmt = null;
+        try {
+            stmt = conn.createStatement();
+            String sql;
+            sql = "UPDATE `user` SET `password`='" + pw + "'" + ", `name`='" + name  + "'" + ", surname='" + surname + "', email='" + mail + "' WHERE username='" + uname + "'";
+            stmt.executeUpdate(sql);
+            stmt.close();
+        } catch (Exception se) {
+            se.printStackTrace();
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException se2) {
+            }
+        }
     }
 
     public static ProjectDto[] loadProjectsOf(String username) {
@@ -171,7 +188,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "SELECT * FROM project WHERE candid=" + username + " AND url=" + url;
+            sql = "SELECT * FROM project WHERE candid='" + username + "' AND url='" + url + "'";
             ResultSet rs = stmt.executeQuery(sql);
 
             while (rs.next()) {
@@ -201,7 +218,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "SELECT * FROM candidate WHERE username=" + uname;
+            sql = "SELECT * FROM candidate WHERE username='" + uname + "'";
             ResultSet rs = stmt.executeQuery(sql);
 
             while (rs.next()) {
@@ -222,22 +239,21 @@ public class Database {
             }
         }
 
-        injectLanguages(uname, dto);
+        dto = injectLanguages(uname, dto);
 
         return dto;
     }
 
-    private static void injectLanguages(String uname, CandidateDto dto){
-        List<String> langs = new ArrayList<>();
+    private static CandidateDto injectLanguages(String uname, CandidateDto dto){
         Statement stmt = null;
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "SELECT * FROM languages WHERE candid=" + uname;
+            sql = "SELECT * FROM languages WHERE candid='" + uname + "'";
             ResultSet rs = stmt.executeQuery(sql);
 
             while (rs.next()) {
-                langs.add(rs.getString("lang"));
+                dto.languages = rs.getString("lang").split(",");
             }
             rs.close();
             stmt.close();
@@ -251,8 +267,7 @@ public class Database {
             } catch (SQLException se2) {
             }
         }
-
-        dto.languages = (String[]) langs.toArray();
+        return dto;
     }
 
     public static void updateCandidate(String uname, String biofield, String sistatikes, String certificates, String[] langs) {
@@ -260,7 +275,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "UPDATE candidate SET bio=" + biofield + ", sistatikes=" + sistatikes + ", certificates=" + certificates + " WHERE username=" + uname;
+            sql = "UPDATE candidate SET bio='" + biofield + "'" + ", sistatikes='" + sistatikes  + "'" + ", certificates='" + certificates + "'" + " WHERE username='" + uname + "'";
             stmt.executeUpdate(sql);
             stmt.close();
         } catch (Exception se) {
@@ -282,7 +297,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "DELETE * FROM languages WHERE candid=" + uname;
+            sql = "DELETE * FROM languages WHERE candid='" + uname + "'";
             stmt.executeUpdate(sql);
             stmt.close();
         } catch (Exception se) {
@@ -305,7 +320,7 @@ public class Database {
             try {
                 stmt = conn.createStatement();
                 String sql;
-                sql = "INSERT INTO languages VALUES(" + uname + "," + lang + ")";
+                sql = "INSERT INTO languages VALUES('" + uname + "','" + lang + "')";
                 stmt.executeUpdate(sql);
                 stmt.close();
             } catch (Exception se) {
@@ -326,7 +341,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "INSERT INTO project VALUES(" + uname + "," + num + "," + desc + "," + url + ")";
+            sql = "INSERT INTO project VALUES('" + uname + "'," + num + ",'" + desc + "','" + url + "')";
             stmt.executeUpdate(sql);
             stmt.close();
         } catch (Exception se) {
@@ -346,7 +361,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "UPDATE project SET url=" + newurl + ", num=" + num + ", descr=" + desc + " WHERE uname=" + uname + " AND url=" + url;
+            sql = "UPDATE project SET url='" + newurl + "', num=" + num + ", descr='" + desc + "' WHERE uname='" + uname + "' AND url='" + url + "'";
             stmt.executeUpdate(sql);
             stmt.close();
         } catch (Exception se) {
@@ -370,7 +385,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "INSERT INTO applies VALUES(" + name + "," + jobPosId + ")";
+            sql = "INSERT INTO applies VALUES('" + name + "','" + jobPosId + "')";
             stmt.executeUpdate(sql);
             stmt.close();
         } catch (Exception se) {
@@ -398,7 +413,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "DELETE * FROM applies WHERE job_id=" + jobid + " AND cand_usrname=" + name;
+            sql = "DELETE * FROM applies WHERE job_id='" + jobid + "' AND cand_usrname='" + name + "'";
             stmt.executeUpdate(sql);
             stmt.close();
         } catch (Exception se) {
@@ -428,7 +443,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "SELECT * FROM has_degree WHERE cand_usrname=" + name;
+            sql = "SELECT * FROM has_degree WHERE cand_usrname='" + name + "'";
             ResultSet rs = stmt.executeQuery(sql);
 
             while (rs.next()) {
@@ -461,7 +476,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "UPDATE has_degree SET etos=" + year + ", grade=" + grade + " has_degree WHERE name=" + name + " AND degr_title=" + title + " AND degr_idryma=" + idryma;
+            sql = "UPDATE has_degree SET etos=" + year + ", grade=" + grade + " has_degree WHERE name='" + name + "' AND degr_title='" + title + "' AND degr_idryma='" + idryma + "'";
             stmt.executeUpdate(sql);
             stmt.close();
         } catch (Exception se) {
@@ -481,7 +496,7 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "INSERT INTO has_degree VALUES(" + title + "," + idryma + "," + name + "," + year + "," + grade + ")";
+            sql = "INSERT INTO has_degree VALUES('" + title + "','" + idryma + "','" + name + "'," + year + "," + grade + ")";
             stmt.executeUpdate(sql);
             stmt.close();
         } catch (Exception se) {

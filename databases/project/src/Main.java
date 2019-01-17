@@ -10,11 +10,5 @@ public class Main {
         }
 
         new Login();
-
-        try {
-            Database.conn.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 }

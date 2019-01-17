@@ -12,9 +12,9 @@ public class Candidate {
     public Candidate() {
         Util.showUserEditWindow();
         showCandidateProfileEditWindow();
-        showProjectsEditWindow();
-        showEditDegreesWindow();
-        showApplicationWizard();
+//        showProjectsEditWindow();
+//        showEditDegreesWindow();
+//        showApplicationWizard();
     }
 
     private void showEditDegreesWindow() {
@@ -318,7 +318,8 @@ public class Candidate {
 
         frame.getContentPane().setLayout(new FlowLayout());
 
-        var biofield = new JTextField("Bio",200);
+        var biofield = new JTextArea();
+        biofield.setText("bio");
 
         var sistatikesfield = new JTextField("passw",35);
         ((AbstractDocument)sistatikesfield.getDocument()).setDocumentFilter(new LimitDocumentFilter(35));
@@ -350,7 +351,7 @@ public class Candidate {
         certificatesfield.setText(dto.certificates);
         languagesfield.setText(String.join(" ", dto.languages));
 
-
+        frame.setSize(800, 600);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }

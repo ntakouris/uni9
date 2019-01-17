@@ -14,12 +14,14 @@ public class Login {
         frame.getContentPane().setLayout(new FlowLayout());
         var unamefield = new JTextField("Username",12);
         ((AbstractDocument)unamefield.getDocument()).setDocumentFilter(new LimitDocumentFilter(12));
+        unamefield.setText("zazahir23");
 
         var pwfield = new JTextField("passw",10);
         ((AbstractDocument)pwfield.getDocument()).setDocumentFilter(new LimitDocumentFilter(10));
+        pwfield.setText("zoolhger");
 
-        var errfield = new JTextField("", 50);
-        errfield.setVisible(false);
+        var errfield = new JTextField("no errors", 50);
+        errfield.setVisible(true);
 
         var btn = new Button("Login");
 
@@ -50,6 +52,7 @@ public class Login {
                     break;
             }
 
+            frame.setVisible(false);
             frame.dispose();
         });
 
@@ -60,6 +63,7 @@ public class Login {
         frame.pack();
 
         frame.setVisible(true);
+        frame.setSize(800, 600);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 }
