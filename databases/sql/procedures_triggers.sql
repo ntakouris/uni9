@@ -3,7 +3,7 @@ DELIMITER //
 CREATE PROCEDURE CANDIDATES_FOR (IN j_id int(4))
 BEGIN
     DECLARE uname VARCHAR(12);
-    DECLARE iid INT;
+    DECLARE cand_was_interviewed INT;
     DECLARE pers TINYINT;
     DECLARE edu TINYINT;
     DECLARE ex TINYINT;
@@ -13,7 +13,6 @@ BEGIN
     
     DECLARE crsr_cand CURSOR FOR 
     SELECT cand_usrname FROM applies WHERE job_id = j_id; 
-
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
 
     OPEN crsr_cand;
@@ -25,27 +24,32 @@ BEGIN
     LEAVE cand_loop;
     END IF;
     
-    SELECT id, personality, education, experience INTO iid, pers, edu, ex
-    FROM interviews 
-    WHERE target_job = j_id AND cand_usrname = uname 
-    AND (personality = 0 OR education = 0 OR experience = 0) LIMIT 1;
-
-    IF iid IS NOT NULL THEN
-
+    
     SET bad_candidate = 0;
     SET reason = "";
+    
+    SELECT cand_usrname INTO cand_was_interviewed FROM interviews WHERE cand_usrname = uname
+	LIMIT 1;IF cand_was_interviewed IS NULL THEN
+	SET reason = CONCAT(reason, "Not interviewed yet");
+	SET bad_candidate = 1;
+	END IF;
+    
+    SELECT AVG(personality), SUM(education), SUM(experience) INTO pers, edu, ex
+    FROM interviews 
+    WHERE target_job = j_id AND cand_usrname = uname;
 
-    IF personality = 0 THEN
+
+    IF pers = 0 THEN
     SET reason = CONCAT(reason, "Failed the interview");
     SET bad_candidate = 1;
     END IF;
 
-    IF education = 0 THEN
+    IF edu = 0 THEN
     SET reason = CONCAT(reason, "Inadequate education");
     SET bad_candidate = 1;
     END IF;
 
-    IF exp = 0 THEN
+    IF ex = 0 THEN
     SET reason = CONCAT(reason, "No prior experience");
     SET bad_candidate = 1;
     END IF;
@@ -53,16 +57,14 @@ BEGIN
     IF bad_candidate = 1 THEN
     SELECT uname, reason;
     ELSE
-
-    SELECT cand_usrname, (AVG(interviews.personality) + SUM(interviews.education) + SUM(interviews.experience))
+    SELECT uname, (AVG(interviews.personality) + SUM(interviews.education) + SUM(interviews.experience)) AS score
     FROM applies
     INNER JOIN interviews ON 
     (applies.job_id = j_id AND applies.job_id = interviews.target_job AND applies.cand_usrname = interviews.cand_usrname)
-    GROUP BY cand_usrname
+    GROUP BY uname
     ORDER BY (AVG(interviews.personality)+SUM(interviews.education)+SUM(interviews.experience)) DESC;
     END IF;
 
-    END IF;
     END LOOP;
     CLOSE crsr_cand;
 END //
