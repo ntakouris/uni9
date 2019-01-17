@@ -1,0 +1,119 @@
+Table "etaireia" {
+  "AFM" CHAR PK
+  "DOY" VARCHAR
+  "name" VARCHAR
+  "tel" BIGINT
+  "street" VARCHAR
+  "num" TINYINT
+  "city" VARCHAR
+  "country" VARCHAR
+}
+
+Table "antikeim" {
+  "title" VARCHAR PK
+  "descr" TINYTEXT
+  "belongs_to" VARCHAR
+}
+
+Table "user" {
+  "username" VARCHAR PK
+  "password" VARCHAR
+  "name" VARCHAR
+  "surname" VARCHAR
+  "reg_date" DATETIME
+  "email" VARCHAR
+}
+
+Table "recruiter" {
+  "username" VARCHAR PK
+  "exp_years" TINYINT
+  "firm" CHAR
+}
+
+Table "candidate" {
+  "username" VARCHAR PK
+  "bio" TEXT
+  "sistatikes" VARCHAR
+  "certificates" VARCHAR
+}
+
+Table "languages" {
+  "candid" VARCHAR
+  "lang" SET
+}
+
+Table "project" {
+  "candid" VARCHAR
+  "num" TINYINT
+  "descr" TEXT
+  "url" VARCHAR
+}
+
+Table "degree" {
+  "titlos" VARCHAR
+  "idryma" VARCHAR
+  "bathmida" ENUM
+}
+
+Table "has_degree" {
+  "degr_title" VARCHAR
+  "degr_idryma" VARCHAR
+  "cand_usrname" VARCHAR
+  "etos" YEAR
+  "grade" FLOAT
+}
+
+Table "job" {
+  "id" INT PK
+  "start_date" DATE
+  "salary" FLOAT
+  "position" VARCHAR
+  "edra" VARCHAR
+  "recruiter" VARCHAR
+  "announce_date" DATETIME
+  "submission_date" DATE
+}
+
+Table "requires" {
+  "job_id" INT
+  "antikeim_title" VARCHAR
+}
+
+Table "applies" {
+  "cand_usrname" VARCHAR
+  "job_id" INT
+}
+
+Table "interviews" {
+  "id" INT
+  "recruiter_name" VARCHAR
+  "cand_usrname" VARCHAR
+  "target_job" INT
+  "duration_hours" INT
+  "start_date" DATETIME
+  "personality" TINYINT
+  "education" TINYINT
+  "experience" TINYINT
+  "comments" VARCHAR
+}
+
+Table "sections" {
+  "title" VARCHAR
+  "descr" VARCHAR
+  "parent" VARCHAR
+}
+
+Table "sections_per_company" {
+  "company_afm" CHAR
+  "section" VARCHAR
+}
+
+Table "audit_logs" {
+  "id" INT
+  "username" VARCHAR
+  "action_type" VARCHAR
+  "happened_at" DATETIME
+  "table_name" VARCHAR
+  "success" INT
+}
+
