@@ -3,7 +3,6 @@ import util.LimitDocumentFilter;
 
 import javax.swing.*;
 import javax.swing.text.AbstractDocument;
-import javax.xml.crypto.Data;
 import java.awt.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -13,7 +12,7 @@ public class Candidate {
         Util.showUserEditWindow();
         showCandidateProfileEditWindow();
         showProjectsEditWindow();
-//        showEditDegreesWindow();
+        showEditDegreesWindow();
 //        showApplicationWizard();
     }
 
@@ -23,7 +22,7 @@ public class Candidate {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setLayout(new FlowLayout());
 
-        var list = new JList<>(Stream.of(Database.loadHasDegreeFor(User.name)).map(x -> x.title).toArray());
+        var list = new JList<>(Database.loadHasDegreeFor(User.name).stream().map(x -> x.title).toArray());
 
         Function refresh = (Object nothing) -> {
             DefaultListModel listModel = (DefaultListModel) list.getModel();
@@ -46,6 +45,7 @@ public class Candidate {
 
         frame.pack();
 
+        frame.setSize(800,600);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
@@ -103,7 +103,7 @@ public class Candidate {
 
         frame.pack();
 
-
+        frame.setSize(800, 600);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
@@ -130,6 +130,7 @@ public class Candidate {
 
         frame.pack();
 
+        frame.setSize(800, 600);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
@@ -163,6 +164,7 @@ public class Candidate {
 
         frame.pack();
 
+        frame.setSize(800, 600);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
@@ -207,6 +209,7 @@ public class Candidate {
         frame.getContentPane().add(statusfield);
         frame.getContentPane().add(btn);
 
+        frame.setSize(800,600);
         frame.pack();
 
         var dto = Database.loadOpenPosition(id);
@@ -221,8 +224,6 @@ public class Candidate {
 
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-
     }
 
     private void showProjectsEditWindow(){

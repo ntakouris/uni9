@@ -467,7 +467,7 @@ public class Database {
         return null;
     }
 
-    public static HasDegreeDto[] loadHasDegreeFor(String name) {
+    public static List<HasDegreeDto> loadHasDegreeFor(String name) {
         Statement stmt = null;
         List<HasDegreeDto> dto = new ArrayList<>();
 
@@ -499,7 +499,7 @@ public class Database {
             } catch (SQLException se2) {
             }
         }
-        return (HasDegreeDto[]) dto.toArray();
+        return dto;
     }
 
     public static void addHasDegree(String name, String title, String idryma, String year, String grade) {
