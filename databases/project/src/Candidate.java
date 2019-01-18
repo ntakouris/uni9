@@ -13,7 +13,7 @@ public class Candidate {
         showCandidateProfileEditWindow();
         showProjectsEditWindow();
         showEditDegreesWindow();
-//        showApplicationWizard();
+        showApplicationWizard();
     }
 
     private void showEditDegreesWindow() {
@@ -119,13 +119,9 @@ public class Candidate {
         var viewOpenPositionsBtn = new JButton("View positions to applyForJob");
         var editSubmittedApplicationsBtn = new JButton("View and edit submitted applications");
 
-        viewOpenPositionsBtn.addActionListener(e -> {
-            showPositions(x -> Database.loadOpenPositions(User.name));
-        });
+        viewOpenPositionsBtn.addActionListener(e -> showPositions(x -> (PositionDto[]) Database.loadOpenPositions(User.name).toArray()));
 
-        editSubmittedApplicationsBtn.addActionListener(e -> {
-            showPositions(x -> Database.loadSubmittedPositions(User.name));
-        });
+        editSubmittedApplicationsBtn.addActionListener(e -> showPositions(x -> (PositionDto[]) Database.loadSubmittedPositions(User.name).toArray()));
 
         frame.getContentPane().add(viewOpenPositionsBtn);
         frame.getContentPane().add(editSubmittedApplicationsBtn);
@@ -222,6 +218,8 @@ public class Candidate {
 
         if(dto.rank != -1){
             rankfield.setText(String.format("Your rank is %d out of %d candidates", dto.rank, dto.totalcands));
+        }else{
+            rankfield.setText("");
         }
 
         frame.setVisible(true);

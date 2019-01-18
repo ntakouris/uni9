@@ -407,8 +407,43 @@ public class Database {
         }
     }
 
-    public static PositionDto[] loadOpenPositions(String uname) {
-        return null;
+    // those which user has not applied to
+    public static List<PositionDto> loadOpenPositions(String uname) {
+        Statement stmt = null;
+        List<PositionDto> dto = new ArrayList<>();
+
+        try {
+            stmt = conn.createStatement();
+            String sql;
+            sql = "SELECT * FROM job LEFT JOIN applies ON cand_usrname='" + uname + "' AND job_id=id WHERE applies.cand_usrname IS NULL";
+            ResultSet rs = stmt.executeQuery(sql);
+
+            while (rs.next()) {
+                PositionDto d = new PositionDto();
+                d.id = rs.getInt("id");
+                d.start_date = rs.getDate("start_date").toString();
+                d.salary = rs.getInt("salary");
+                d.position = rs.getString("position");
+                d.edra = rs.getString("edra");
+                d.recruiter = rs.getString("recruiter");
+                d.announce_date = rs.getDate("announce_date").toString();
+                d.submission_date = rs.getDate("submission_date").toString();
+
+                dto.add(d);
+            }
+            rs.close();
+            stmt.close();
+        } catch (Exception se) {
+            se.printStackTrace();
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException se2) {
+            }
+        }
+        return dto;
     }
 
     public static void applyForJob(String name, String jobPosId) {
@@ -432,11 +467,65 @@ public class Database {
     }
 
     public static PositionDto loadOpenPosition(String jobId) {
-        return null;
+        Statement stmt = null;
+        PositionDto dto = new PositionDto();
+        try {
+            stmt = conn.createStatement();
+            String sql;
+            sql = "SELECT * FROM job WHERE id=" + jobId;
+            ResultSet rs = stmt.executeQuery(sql);
+
+            while (rs.next()) {
+                dto.id = rs.getInt("id");
+                dto.start_date = rs.getDate("start_date").toString();
+                dto.salary = rs.getInt("salary");
+                dto.position = rs.getString("position");
+                dto.edra = rs.getString("edra");
+                dto.recruiter = rs.getString("recruiter");
+                dto.announce_date = rs.getDate("announce_date").toString();
+                dto.submission_date = rs.getDate("submission_date").toString();
+            }
+            rs.close();
+            stmt.close();
+        } catch (Exception se) {
+            se.printStackTrace();
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException se2) {
+            }
+        }
+        return dto;
     }
 
     public static boolean canCandidateRemoveApplication(String name, String jobid) {
-        return false;
+        Statement stmt = null;
+        boolean result = false;
+        try {
+            stmt = conn.createStatement();
+            String sql;
+            sql = "SELECT * FROM applies INNER JOIN job ON cand_usrname='" + name + "' AND job_id=" + jobid;
+            ResultSet rs = stmt.executeQuery(sql);
+
+            while (rs.next()) {
+                var startDate = rs.getDate("start_date");
+                result = new Date(new java.util.Date().getTime()).compareTo(startDate) >= 0;
+            }
+            rs.close();
+            stmt.close();
+        } catch (Exception se) {
+            se.printStackTrace();
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException se2) {
+            }
+        }
+        return result;
     }
 
     public static void removeApplicationForJob(String name, String jobid) {
@@ -459,8 +548,42 @@ public class Database {
         }
     }
 
-    public static PositionDto[] loadSubmittedPositions(String name) {
-        return null;
+    public static List<PositionDto> loadSubmittedPositions(String name) {
+        Statement stmt = null;
+        List<PositionDto> dto = new ArrayList<>();
+
+        try {
+            stmt = conn.createStatement();
+            String sql;
+            sql = "SELECT * FROM applies INNER JOIN job ON cand_usrname='" + name + "' AND job_id=id";
+            ResultSet rs = stmt.executeQuery(sql);
+
+            while (rs.next()) {
+                PositionDto d = new PositionDto();
+                d.id = rs.getInt("id");
+                d.start_date = rs.getDate("start_date").toString();
+                d.salary = rs.getInt("salary");
+                d.position = rs.getString("position");
+                d.edra = rs.getString("edra");
+                d.recruiter = rs.getString("recruiter");
+                d.announce_date = rs.getDate("announce_date").toString();
+                d.submission_date = rs.getDate("submission_date").toString();
+
+                dto.add(d);
+            }
+            rs.close();
+            stmt.close();
+        } catch (Exception se) {
+            se.printStackTrace();
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException se2) {
+            }
+        }
+        return dto;
     }
 
     public static List<DegreeDto> availableDegreesToAdd(String name) {
