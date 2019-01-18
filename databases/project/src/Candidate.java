@@ -25,12 +25,9 @@ public class Candidate {
         var list = new JList<>(Database.loadHasDegreeFor(User.name).stream().map(x -> x.title).toArray());
 
         Function refresh = (Object nothing) -> {
-            DefaultListModel listModel = (DefaultListModel) list.getModel();
-            listModel.removeAllElements();
+            list.removeAll();
 
-            for(var dto : Database.loadHasDegreeFor(User.name)){
-                listModel.addElement(dto.title);
-            }
+            list.setListData(Database.loadHasDegreeFor(User.name).stream().map(x -> x.title).toArray());
             return true;
         };
 
@@ -51,7 +48,7 @@ public class Candidate {
     }
 
     private void showEditDegreeWindow(Function refresh, String title){
-        var frame = new JFrame("Add new degree");
+        var frame = new JFrame(title == null ? "Add new degree" : title);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -60,7 +57,7 @@ public class Candidate {
         // list
         JComboBox nameslist;
         if (title == null) {
-            nameslist = new JComboBox(Stream.of(Database.availableDegreesToAdd(User.name)).map(x -> String.join(" ", new String[]{x.titlos, x.idryma})).toArray());
+            nameslist = new JComboBox(Database.availableDegreesToAdd(User.name).stream().map(x -> String.join(" ", new String[]{x.titlos, x.idryma})).toArray());
         }else{
             nameslist = new JComboBox(new String[]{title});
         }
@@ -68,7 +65,7 @@ public class Candidate {
         var etosfield = new JTextField("0");
         var gradefield = new JTextField("5");
 
-        var btn = new JButton("Add degree");
+        var btn = new JButton(title == null ? "Add degree" : "Edit degree");
         var rmbtn = new JButton("Remove degree");
         rmbtn.setVisible(title != null);
 
@@ -76,7 +73,12 @@ public class Candidate {
             //TODO: check year, grade
             String[] item = ((String)nameslist.getSelectedItem()).split(" ");
 
-            Database.addHasDegree(User.name, item[0], item[1], etosfield.getText(), gradefield.getText());
+            if(title == null){
+                Database.addHasDegree(User.name, item[0], item[1], etosfield.getText(), gradefield.getText());
+            }else{
+                Database.editHasDegree(User.name, item[0], item[1], etosfield.getText(), gradefield.getText());
+            }
+
 
             refresh.apply(null);
             frame.dispose();
@@ -90,7 +92,7 @@ public class Candidate {
             //TODO: Check year, grade
             String[] item = title.split(" ");
 
-            Database.editHasDegree(User.name, item[0], item[1], etosfield.getText(), gradefield.getText());
+            Database.removeDegree(User.name, item[0], item[1]);
 
             refresh.apply(null);
             frame.dispose();

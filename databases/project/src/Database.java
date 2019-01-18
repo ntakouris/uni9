@@ -463,8 +463,39 @@ public class Database {
         return null;
     }
 
-    public static DegreeDto[] availableDegreesToAdd(String name) {
-        return null;
+    public static List<DegreeDto> availableDegreesToAdd(String name) {
+        Statement stmt = null;
+        List<DegreeDto> dto = new ArrayList<>();
+
+        try {
+            stmt = conn.createStatement();
+            String sql;
+            sql = "SELECT degree.idryma AS idryma, degree.titlos AS titlos, degree.bathmida AS bathmida" +
+                    " FROM degree LEFT JOIN has_degree ON cand_usrname='" + name + "' AND degree.titlos=has_degree.degr_title AND degree.idryma=has_degree.degr_idryma " +
+                    "WHERE has_degree.titlos IS NULL";
+            ResultSet rs = stmt.executeQuery(sql);
+
+            while (rs.next()) {
+                DegreeDto deg = new DegreeDto();
+                deg.idryma = rs.getString("idryma");
+                deg.titlos = rs.getString("titlos");
+                deg.bathmida = rs.getString("bathmida");
+
+                dto.add(deg);
+            }
+            rs.close();
+            stmt.close();
+        } catch (Exception se) {
+            se.printStackTrace();
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException se2) {
+            }
+        }
+        return dto;
     }
 
     public static List<HasDegreeDto> loadHasDegreeFor(String name) {
@@ -528,6 +559,26 @@ public class Database {
             stmt = conn.createStatement();
             String sql;
             sql = "INSERT INTO has_degree VALUES('" + title + "','" + idryma + "','" + name + "'," + year + "," + grade + ")";
+            stmt.executeUpdate(sql);
+            stmt.close();
+        } catch (Exception se) {
+            se.printStackTrace();
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException se2) {
+            }
+        }
+    }
+
+    public static void removeDegree(String name, String titlos, String idryma) {
+        Statement stmt = null;
+        try {
+            stmt = conn.createStatement();
+            String sql;
+            sql = "DELETE * FROM has_degree WHERE cand_usrname='" + name + "' AND degr_title='" + titlos + "' AND degr_idryma='" + idryma + "'";
             stmt.executeUpdate(sql);
             stmt.close();
         } catch (Exception se) {
