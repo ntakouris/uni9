@@ -17,7 +17,7 @@ public class Candidate {
     }
 
     private void showEditDegreesWindow() {
-        var frame = new JFrame("Applications");
+        var frame = new JFrame("Degrees");
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setLayout(new FlowLayout());

@@ -351,7 +351,7 @@ public class Database {
             try {
                 stmt = conn.createStatement();
                 String sql;
-                sql = "INSERT INTO languages VALUES('" + uname + "','" + lang + "')";
+                sql = "UPDATE languages SET lang='" + String.join(",", langs) + "' WHERE candid='" + uname + "'";
                 stmt.executeUpdate(sql);
                 stmt.close();
             } catch (Exception se) {
@@ -593,9 +593,9 @@ public class Database {
         try {
             stmt = conn.createStatement();
             String sql;
-            sql = "SELECT degree.idryma AS idryma, degree.titlos AS titlos, degree.bathmida AS bathmida" +
+            sql = "SELECT *" +
                     " FROM degree LEFT JOIN has_degree ON cand_usrname='" + name + "' AND degree.titlos=has_degree.degr_title AND degree.idryma=has_degree.degr_idryma " +
-                    "WHERE has_degree.titlos IS NULL";
+                    "WHERE has_degree.degr_title IS NULL";
             ResultSet rs = stmt.executeQuery(sql);
 
             while (rs.next()) {
@@ -662,6 +662,7 @@ public class Database {
             stmt = conn.createStatement();
             String sql;
             sql = "UPDATE has_degree SET etos=" + year + ", grade=" + grade + " has_degree WHERE name='" + name + "' AND degr_title='" + title + "' AND degr_idryma='" + idryma + "'";
+            sql = "INSERT INTO has_degree VALUES('" + title + "','" + idryma + "','" + name + "'," + year + ", " + grade +")";
             stmt.executeUpdate(sql);
             stmt.close();
         } catch (Exception se) {
