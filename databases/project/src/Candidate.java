@@ -5,7 +5,7 @@ import javax.swing.*;
 import javax.swing.text.AbstractDocument;
 import java.awt.*;
 import java.util.function.Function;
-import java.util.stream.Stream;
+import java.util.List;
 
 public class Candidate {
     public Candidate() {
@@ -119,9 +119,9 @@ public class Candidate {
         var viewOpenPositionsBtn = new JButton("View positions to applyForJob");
         var editSubmittedApplicationsBtn = new JButton("View and edit submitted applications");
 
-        viewOpenPositionsBtn.addActionListener(e -> showPositions(x -> (PositionDto[]) Database.loadOpenPositions(User.name).toArray()));
+        viewOpenPositionsBtn.addActionListener(e -> showPositions(x ->  Database.loadOpenPositions(User.name)));
 
-        editSubmittedApplicationsBtn.addActionListener(e -> showPositions(x -> (PositionDto[]) Database.loadSubmittedPositions(User.name).toArray()));
+        editSubmittedApplicationsBtn.addActionListener(e -> showPositions(x ->  Database.loadSubmittedPositions(User.name)));
 
         frame.getContentPane().add(viewOpenPositionsBtn);
         frame.getContentPane().add(editSubmittedApplicationsBtn);
@@ -133,32 +133,30 @@ public class Candidate {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    private void showPositions(Function<Object, PositionDto[]> source){
-        var frame = new JFrame("Apply for new position");
+    private void showPositions(Function<Object, List<PositionDto>> source){
+        var frame = new JFrame("Positions");
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setLayout(new FlowLayout());
 
-        var list = new JList<>(Stream.of(source.apply(null)).map(x -> x.position).toArray());
+        var list = new JList<>(source.apply(null).stream().map(x -> (x.position + "~" + x.id)).toArray());
 
         Function refresh = (Object nothing) -> {
-            DefaultListModel listModel = (DefaultListModel) list.getModel();
-            listModel.removeAllElements();
-
-            for(var dto : source.apply(null)){
-                listModel.addElement(dto.position);
-            }
+            list.removeAll();
+            list.setListData(source.apply(null).stream().map(x -> (x.position + "~" + x.id)).toArray());
             return true;
         };
 
-        var addProjectButton = new Button("Add project");
+        var addPositionBtn = new Button("Add position");
 
-        list.addListSelectionListener(e -> showPositionDetail((String) list.getSelectedValue(), refresh));
-
-        addProjectButton.addActionListener(e -> showProjectAddWindow(refresh));
+        list.addListSelectionListener(e -> {
+            var val = list.getSelectedValue();
+            var components = val.toString().split("~");
+            showPositionDetail(components[1], refresh);
+        });
 
         frame.getContentPane().add(list);
-        frame.getContentPane().add(addProjectButton);
+        frame.getContentPane().add(addPositionBtn);
 
         frame.pack();
 
@@ -176,13 +174,15 @@ public class Candidate {
 
         var positionfield = new JTextField("descriptions",40);
 
-        var salaryfield = new JTextField("10000",200);
+        var salaryfield = new JTextField("10000",10);
 
         var edrafield = new JTextField("edra", 45);
 
         var rankfield = new JTextField("", 20);
+        rankfield.setVisible(false);
 
         var statusfield = new JTextField("status", 50);
+        statusfield.setVisible(false);
         //TODO: Add status of application based on dates
 
         var canRevokeApplication = Database.canCandidateRemoveApplication(User.name, id);
@@ -207,7 +207,6 @@ public class Candidate {
         frame.getContentPane().add(statusfield);
         frame.getContentPane().add(btn);
 
-        frame.setSize(800,600);
         frame.pack();
 
         var dto = Database.loadOpenPosition(id);
@@ -222,6 +221,7 @@ public class Candidate {
             rankfield.setText("");
         }
 
+        frame.setSize(800,600);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }

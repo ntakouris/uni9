@@ -235,7 +235,7 @@ END //
 DELIMITER ;
 
 DELIMITER //
-CREATE TRIGGER et_upd BEFORE UPDATE ON etaireia
+CREATE TRIGGER et_upd AFTER UPDATE ON etaireia
 FOR EACH ROW
 BEGIN 
 SET NEW.AFM = OLD.AFM;
@@ -255,7 +255,7 @@ DELIMITER ;
 
 
 DELIMITER //
-CREATE TRIGGER prevent_application_del BEFORE DELETE ON applies
+CREATE TRIGGER prevent_application_del AFTER DELETE ON applies
     FOR EACH ROW
     BEGIN
     IF (SELECT submission_date from job WHERE job.id = job_id) < NOW() THEN

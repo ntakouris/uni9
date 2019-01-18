@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c990a1f1-6c2d-437b-bda0-6d284e52a34b" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Candidate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Candidate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Database.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Database.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -15,25 +13,25 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Candidate.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="461">
-              <caret line="59" column="63" lean-forward="true" selection-start-line="59" selection-start-column="63" selection-end-line="59" selection-end-column="63" />
+            <state relative-caret-position="236">
+              <caret line="186" lean-forward="true" selection-start-line="186" selection-end-line="186" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#8685#8686#0" expanded="true" />
-                <element signature="e#8737#8738#0" expanded="true" />
+                <element signature="e#8444#8445#0" expanded="true" />
+                <element signature="e#8496#8497#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Database.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="378">
-              <caret line="664" column="121" selection-start-line="664" selection-start-column="121" selection-end-line="664" selection-end-column="121" />
+            <state relative-caret-position="301">
+              <caret line="468" column="30" selection-start-line="468" selection-start-column="30" selection-end-line="468" selection-end-column="30" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -68,6 +66,7 @@
       <find>list</find>
       <find>openpo</find>
       <find>positi</find>
+      <find>addhasde</find>
     </findStrings>
     <replaceStrings>
       <replace>DELETE</replace>
@@ -91,8 +90,8 @@
         <option value="$PROJECT_DIR$/src/Main.java" />
         <option value="$PROJECT_DIR$/src/Util.java" />
         <option value="$PROJECT_DIR$/src/Login.java" />
-        <option value="$PROJECT_DIR$/src/Candidate.java" />
         <option value="$PROJECT_DIR$/src/Database.java" />
+        <option value="$PROJECT_DIR$/src/Candidate.java" />
       </list>
     </option>
   </component>
@@ -196,7 +195,7 @@
       <workItem from="1545756091298" duration="7000" />
       <workItem from="1547464298374" duration="4417000" />
       <workItem from="1547737134734" duration="4143000" />
-      <workItem from="1547814063696" duration="4678000" />
+      <workItem from="1547814063696" duration="5836000" />
     </task>
     <task id="LOCAL-00001" summary="Add part 1 of candidate requirements">
       <created>1545667089217</created>
@@ -268,11 +267,18 @@
       <option name="project" value="LOCAL" />
       <updated>1547816931951</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Fix degree insertion suggestion and addition">
+      <created>1547819915275</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1547819915275</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="23293000" />
+    <option name="totallyTimeSpent" value="24451000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1680" height="1050" extended-state="6" />
@@ -317,7 +323,8 @@
     <MESSAGE value="Fix some degree edit ui" />
     <MESSAGE value="Finish degree database layer" />
     <MESSAGE value="Finish open positions database layer" />
-    <option name="LAST_COMMIT_MESSAGE" value="Finish open positions database layer" />
+    <MESSAGE value="Fix degree insertion suggestion and addition" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix degree insertion suggestion and addition" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/project.iml">
@@ -427,24 +434,24 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Candidate.java">
+    <entry file="file://$PROJECT_DIR$/src/Database.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="461">
-          <caret line="59" column="63" lean-forward="true" selection-start-line="59" selection-start-column="63" selection-end-line="59" selection-end-column="63" />
+        <state relative-caret-position="301">
+          <caret line="468" column="30" selection-start-line="468" selection-start-column="30" selection-end-line="468" selection-end-column="30" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#8685#8686#0" expanded="true" />
-            <element signature="e#8737#8738#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Database.java">
+    <entry file="file://$PROJECT_DIR$/src/Candidate.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="378">
-          <caret line="664" column="121" selection-start-line="664" selection-start-column="121" selection-end-line="664" selection-end-column="121" />
+        <state relative-caret-position="236">
+          <caret line="186" lean-forward="true" selection-start-line="186" selection-end-line="186" />
           <folding>
             <element signature="imports" expanded="true" />
+            <element signature="e#8444#8445#0" expanded="true" />
+            <element signature="e#8496#8497#0" expanded="true" />
           </folding>
         </state>
       </provider>

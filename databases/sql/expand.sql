@@ -24,6 +24,10 @@ recruiter_name, cand_usrname,  target_job, duration_hours, start_date,   persona
 ('msmith',      'liagourma',   4,          3,              '',           3,           5,         4,          "The second interview proved the candidate suitable for the job, and resolved the bad impression left on the first one."),
 ('msmith',      'lionarF',     5,          2,              '',           3,           2,         0,          "Inadequate experience and knowledge on 2d and 3d graphics required for the position");
 
+INSERT INTO interviews (
+recruiter_name, cand_usrname,  target_job, duration_hours, start_date,   personality, education, experience, comments) VALUES
+('msmith',      'mnikol',      4,          1,              NOW(),        0,           0,         0,          "bad bad boy");
+
 CREATE TABLE sections(
     title VARCHAR(25) NOT NULL,
     descr VARCHAR(255) NOT NULL,
