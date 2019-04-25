@@ -1,0 +1,5 @@
+XHTML (eXtensible HyperText Markup Language) is a family of XML markup
+languages that mirror or extend versions of the widely-used Hypertext Markup
+Language (HTML), the language in which web pages are written. XHTML 1.0 became
+a World Wide Web Consortium (W3C) Recommendation on January 26, 2000, for
+encoding documents in a format that is both human-readable and machine-readable.

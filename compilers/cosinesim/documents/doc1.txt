@@ -1,0 +1,3 @@
+Extensible Markup Language (XML) is a markup language that defines a set of rules
+for encoding documents in a format that is both human-readable and machinereadable. It is defined in the XML 1.0 Specification produced by the World Wide Web
+Consortium (W3C), and several other related specifications, all gratis open standards. 
