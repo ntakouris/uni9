@@ -12,7 +12,6 @@ for f = 1:frame_count
     
     writeVideo(writerObj, frame);
 end
-transforms = arrayfun(shear_horiz, sin(0:0.1:pi));
 
 close(writerObj);
 implay('pudding_shear.avi');
