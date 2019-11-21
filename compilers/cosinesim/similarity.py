@@ -3,7 +3,7 @@ import string
 from collections import Counter
 import math
 
-K = 1 # user input
+K = 3 # user input
 
 def binom(x, y):
     if y == x:
