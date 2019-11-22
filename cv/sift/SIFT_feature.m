@@ -12,6 +12,7 @@ clear;
 clc;
 row=256;
 colum=256;
+%% Read Image, convert to double and resize to 256 x 256
 img=imread('cameraman.tif');
 img=imresize(img,[row,colum]);
 img=im2double(img);
@@ -21,33 +22,43 @@ toc
 tic
 % original sigma and the number of actave can be modified. the larger
 % sigma0, the more quickly-smooth images
+%% initial level-0 gaussian smoothing setup
 sigma0=sqrt(2);
 octave=3;%6*sigma*k^(octave*level)<=min(m,n)/(2^(octave-2))
 level=3;
+
 D=cell(1,octave);
+
+%% prepare octaves for storage, with 3 levels each
+%% multi-resolution + multi-blob scale detection
+%% empirical values are selected, although in the paper it is recommended to alter this to fit your own computational needs. Ex. lower res pictures require less levels, or zoomed in pictures requ
+%% ire less scale detections
 for i=1:octave
-D(i)=mat2cell(zeros(row*2^(2-i)+2,colum*2^(2-i)+2,level),row*2^(2-i)+2,colum*2^(2-i)+2,level);
+    D(i)=mat2cell(zeros(row*2^(2-i)+2,colum*2^(2-i)+2,level),   row*2^(2-i)+2,   colum*2^(2-i)+2,  level);
 end
+
 % first image in first octave is created by interpolating the original one.
 temp_img=kron(img,ones(2));
 temp_img=padarray(temp_img,[1,1],'replicate');
 figure(2)
 subplot(1,2,1);
 imshow(origin)
-%create the DoG pyramid.
+
+%create the DoG pyramid
 for i=1:octave
     temp_D=D{i};
-    for j=1:level
-        scale=sigma0*sqrt(2)^(1/level)^((i-1)*level+j);
+    for j=1:level %% for each octave and each level
+        scale=sigma0*sqrt(2)^(1/level)^((i-1)*level+j); %% scaling the gaussians based on the level and the octave
+        
         p=(level)*(i-1);
         figure(1);
         subplot(octave,level,p+j);
-        f=fspecial('gaussian',[1,floor(6*scale)],scale);
+        f=fspecial('gaussian',[1,floor(6*scale)],scale); %% using the scale
         L1=temp_img;
-        if(i==1&&j==1)
-        L2=conv2(temp_img,f,'same');
+        if(i==1&&j==1) % edge cases for first level
+        L2=conv2(temp_img,f,'same'); %% conv for smooth
         L2=conv2(L2,f','same');
-        temp_D(:,:,j)=L2-L1;
+        temp_D(:,:,j)=L2-L1; %% actual diff of gaussian calculate after conv (difference)
         imshow(uint8(255 * mat2gray(temp_D(:,:,j))));
         L1=L2;
         else
@@ -66,14 +77,16 @@ for i=1:octave
     temp_img=padarray(temp_img,[1,1],'both','replicate');
 end
 toc
+
 %% Keypoint Localisation
 % search each pixel in the DoG map to find the extreme point
 tic
 interval=level-1;
 number=0;
 for i=2:octave+1
-    number=number+(2^(i-octave)*colum)*(2*row)*interval;
+    number=number+(2^(i-octave)*colum)*(2*row)*interval; %% storage matrix setup to store the extremas
 end
+
 extrema=zeros(1,4*number);
 flag=1;
 for i=1:octave
@@ -85,90 +98,113 @@ for i=1:octave
         for j=1:volume
             x=ceil(j/n);
             y=mod(j-1,m)+1;
-            sub=D{i}(x:x+2,y:y+2,k-1:k+1);
+            sub=D{i}(x:x+2,y:y+2,k-1:k+1); %% for the i-th octave and for the k-1 ~ k+1 (near levels)
+            
+            %% search the volume, calculating the min and max on both dimensions, on the neigh
             large=max(max(max(sub)));
             little=min(min(min(sub)));
-            if(large==D{i}(x+1,y+1,k))
+            
+            if(large==D{i}(x+1,y+1,k)) %% if extrema, store this
                 temp=[i,k,j,1];
-                extrema(flag:(flag+3))=temp;
+                extrema(flag:(flag+3))=temp; %% store this as a mask
                 flag=flag+4;
             end
             if(little==D{i}(x+1,y+1,k))
                 temp=[i,k,j,-1];
-                extrema(flag:(flag+3))=temp;
+                extrema(flag:(flag+3))=temp; %% same mask storage
                 flag=flag+4;
             end
         end
     end
 end
-idx= extrema==0;
-extrema(idx)=[];
+
+idx= extrema == 0 ;
+extrema(idx)=[]; %% trick: use empty array because actual extremas would contain the [i,k,j,1] pairs (1 in last value-dim).
 toc
 [m,n]=size(img);
+
+%% normalize by dividing with 2^func(dimension, extrema) (???)
 x=floor((extrema(3:4:end)-1)./(n./(2.^(extrema(1:4:end)-2))))+1;
+
 y=mod((extrema(3:4:end)-1),m./(2.^(extrema(1:4:end)-2)))+1;
+
 ry=y./2.^(octave-1-extrema(1:4:end));
 rx=x./2.^(octave-1-extrema(1:4:end));
+
+
 figure(2)
 subplot(1,2,2);
 imshow(origin)
 hold on
 plot(ry,rx,'r+');
+
+
+
 %% accurate keypoint localization 
 %eliminate the point with low contrast or poorly localised on an edge
-% x:|,y:-- x is for vertial and y is for horizontal
+% x:|,y:-- x is for vertical and y is for horizontal
 % value comes from the paper.
 tic
 threshold=0.1;
 r=10;
 extr_volume=length(extrema)/4;
 [m,n]=size(img);
+
+%% gradient kernels
 secondorder_x=conv2([-1,1;-1,1],[-1,1;-1,1]);
 secondorder_y=conv2([-1,-1;1,1],[-1,-1;1,1]);
 for i=1:octave
     for j=1:level
         test=D{i}(:,:,j);
         temp=-1./conv2(test,secondorder_y,'same').*conv2(test,[-1,-1;1,1],'same');
-        D{i}(:,:,j)=temp.*conv2(test',[-1,-1;1,1],'same')*0.5+test;
+        D{i}(:,:,j)=temp.*conv2(test',[-1,-1;1,1],'same')*0.5+test; %% conv to find the gradient values
     end
 end
-for i=1:extr_volume
+for i=1:extr_volume %% for each extrema thing
+    
     x=floor((extrema(4*(i-1)+3)-1)/(n/(2^(extrema(4*(i-1)+1)-2))))+1;
     y=mod((extrema(4*(i-1)+3)-1),m/(2^(extrema(4*(i-1)+1)-2)))+1;
+    
     rx=x+1;
     ry=y+1;
     rz=extrema(4*(i-1)+2);
     z=D{extrema(4*(i-1)+1)}(rx,ry,rz);
-    if(abs(z)<threshold)
-        extrema(4*(i-1)+4)=0;
+    if(abs(z)<threshold) %% localize and then threshold,
+        extrema(4*(i-1)+4)=0; %% pushing all neighborhood to 0
     end
 end
 idx=find(extrema==0);
-idx=[idx,idx-1,idx-2,idx-3];
+idx=[idx,idx-1,idx-2,idx-3]; %% do the same detection as before, analyze in each octave
 extrema(idx)=[];
 extr_volume=length(extrema)/4;
+
+
+%% what??
 x=floor((extrema(3:4:end)-1)./(n./(2.^(extrema(1:4:end)-2))))+1;
 y=mod((extrema(3:4:end)-1),m./(2.^(extrema(1:4:end)-2)))+1;
 ry=y./2.^(octave-1-extrema(1:4:end));
 rx=x./2.^(octave-1-extrema(1:4:end));
+
 figure(2)
 subplot(2,2,3);
 imshow(origin)
 hold on
 plot(ry,rx,'g+');
+
 for i=1:extr_volume
     x=floor((extrema(4*(i-1)+3)-1)/(n/(2^(extrema(4*(i-1)+1)-2))))+1;
     y=mod((extrema(4*(i-1)+3)-1),m/(2^(extrema(4*(i-1)+1)-2)))+1;
+    
     rx=x+1;
     ry=y+1;
     rz=extrema(4*(i-1)+2);
         Dxx=D{extrema(4*(i-1)+1)}(rx-1,ry,rz)+D{extrema(4*(i-1)+1)}(rx+1,ry,rz)-2*D{extrema(4*(i-1)+1)}(rx,ry,rz);
         Dyy=D{extrema(4*(i-1)+1)}(rx,ry-1,rz)+D{extrema(4*(i-1)+1)}(rx,ry+1,rz)-2*D{extrema(4*(i-1)+1)}(rx,ry,rz);
         Dxy=D{extrema(4*(i-1)+1)}(rx-1,ry-1,rz)+D{extrema(4*(i-1)+1)}(rx+1,ry+1,rz)-D{extrema(4*(i-1)+1)}(rx-1,ry+1,rz)-D{extrema(4*(i-1)+1)}(rx+1,ry-1,rz);
-        deter=Dxx*Dyy-Dxy*Dxy;
+        deter=Dxx*Dyy-Dxy*Dxy; %% orizousa
         R=(Dxx+Dyy)/deter;
         R_threshold=(r+1)^2/r;
-        if(deter<0||R>R_threshold)
+        if(deter<0||R>R_threshold) %% if not on edge (?), make 0
             extrema(4*(i-1)+4)=0;
         end
         
@@ -187,7 +223,11 @@ imshow(origin)
 hold on
 plot(ry,rx,'b+');
 toc
-%% Orientation Assignment(Multiple orientations assignment)
+
+
+
+
+%% Orientation Assignment (Multiple orientations assignment)
 tic
 kpori=zeros(1,36*extr_volume);
 minor=zeros(1,36*extr_volume);
@@ -200,17 +240,20 @@ for i=1:extr_volume
     count=1;
     x=floor((extrema(4*(i-1)+3)-1)/(n/(2^(extrema(4*(i-1)+1)-2))))+1;
     y=mod((extrema(4*(i-1)+3)-1),m/(2^(extrema(4*(i-1)+1)-2)))+1;
+    
     %make sure the point in the searchable area
     if(x>(width/2)&&y>(width/2)&&x<(m/2^(extrema(4*(i-1)+1)-2)-width/2-2)&&y<(n/2^(extrema(4*(i-1)+1)-2)-width/2-2))
         rx=x+1;
         ry=y+1;
         rz=extrema(4*(i-1)+2);
-        reg_volume=width*width;%3? thereom
+        reg_volume=width*width;% 3? thereom
+        
         % make weight matrix
         weight=fspecial('gaussian',width,1.5*scale);
         %calculate region pixels' magnitude and region orientation
         reg_mag=zeros(1,count);
-        reg_theta=zeros(1,count);
+        reg_theta=zeros(1,count); %% θ = angle degree
+        
     for l=(rx-width/2):(rx+width/2-1)
         for k=(ry-width/2):(ry+width/2-1)
             reg_mag(count)=sqrt((D{extrema(4*(i-1)+1)}(l+1,k,rz)-D{extrema(4*(i-1)+1)}(l-1,k,rz))^2+(D{extrema(4*(i-1)+1)}(l,k+1,rz)-D{extrema(4*(i-1)+1)}(l,k-1,rz))^2);
@@ -218,6 +261,7 @@ for i=1:extr_volume
             count=count+1;
         end
     end
+    
     %make histogram 
     mag_counts=zeros(1,36);
     for x=0:10:359
@@ -253,11 +297,14 @@ end
 idx= minor==0;
 minor(idx)=[];
 extrema=minor;
+
 % delete unsearchable points and add minor orientation points
 idx= kpori==0;
 kpori(idx)=[];
 extr_volume=length(extrema)/4;
 toc
+
+
 %% keypoint descriptor
 tic
 d=4;% In David G. Lowe experiment,divide the area into 4*4.
@@ -269,6 +316,7 @@ for i=1:extr_volume
     %x,y centeral point and prepare for location rotation
     x=floor((extrema(4*(i-1)+3)-1)/(n/(2^(extrema(4*(i-1)+1)-2))))+1;
     y=mod((extrema(4*(i-1)+3)-1),m/(2^(extrema(4*(i-1)+1)-2)))+1;
+    
     z=extrema(4*(i-1)+2);
         if((m/2^(extrema(4*(i-1)+1)-2)-pixel*d*sqrt(2)/2)>x&&x>(pixel*d/2*sqrt(2))&&(n/2^(extrema(4*(i-1)+1)-2)-pixel*d/2*sqrt(2))>y&&y>(pixel*d/2*sqrt(2)))
         sub_x=(x-d*pixel/2+1):(x+d*pixel/2);
@@ -304,7 +352,7 @@ for i=1:extr_volume
         magcounts=zeros(1,8);
         for angle=0:45:359
           magcount=0;
-          for p=1:cover;
+          for p=1:cover
               x=(floor((p-1)/pixel)+1)+pixel*floor((area-1)/d);
               y=mod(p-1,pixel)+1+pixel*(mod(area-1,d));
               c1=-180+angle;
