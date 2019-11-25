@@ -35,3 +35,4 @@ end
 
 close(writerObj);
 implay('beach.avi');
+% save to transf_beach.mat

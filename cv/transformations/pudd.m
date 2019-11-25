@@ -15,3 +15,4 @@ end
 
 close(writerObj);
 implay('pudding_shear.avi');
+% save to shared_pudding.mat

@@ -26,3 +26,4 @@ end
 
 close(writerObj);
 implay('millspin.avi');
+% save to transf_windmill.mat
