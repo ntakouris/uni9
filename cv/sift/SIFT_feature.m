@@ -13,7 +13,7 @@ clc;
 row=256;
 colum=256;
 %% Read Image, convert to double and resize to 256 x 256
-img=imread('cameraman.tif');
+img=rgb2gray(imread('sift/ransac/right_256.jpg'));
 img=imresize(img,[row,colum]);
 img=im2double(img);
 origin=img;
