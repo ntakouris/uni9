@@ -45,10 +45,23 @@ for f = 1:frame_count
             end
         end
     end
-  
-    i = (1-big_mask) .* bg + big_mask .* big_ball;
-    i = rescale(i);
-    imshow(i)
+
+%     s = size(rot_ball, 1);
+%      
+%     root_x = 200 + int32(offset_x - (s/2)) - int32(s/2);    
+%     root_y = 500 + int32(offset_y - (s/2)) - int32(s/2);
+%     
+%     for x = 1:s
+%         for y = 1:s
+%             if rot_mask(x,y) == 0
+%                 big_ball(root_x + x, root_y + y, :) = rot_ball(x,y,:);
+%                 big_mask(root_x + x, root_y + y, :) = 1;
+%             end
+%         end
+%     end
+%         
+%     i = (1-big_mask) .* bg + big_mask .* big_ball;
+%     i = rescale(i); 
 %     
 %     writeVideo(writerObj, im2frame(i));
 end

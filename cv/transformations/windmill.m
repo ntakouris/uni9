@@ -8,9 +8,6 @@ writerObj = VideoWriter('transf_windmill.avi');
 writerObj.FrameRate = 24;
 open(writerObj);
 
-mill_size = size(mill);
-mill_size = mill_size(1);
-
 method = 'nearest';
 for f = 1:frame_count
     fprintf('Proccessing frame %d of %d\n', f, frame_count)
@@ -37,7 +34,7 @@ for f = 1:frame_count
     end
     
     i = (1-big_mask) .* bg + big_mask .* big_mill;
-    i = rescale(i); 
+    i = rescale(i); % normalize to 0~1
     
     writeVideo(writerObj, im2frame(i));
 end
