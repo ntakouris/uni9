@@ -1,5 +1,16 @@
 eps = 0.1;
 
+% for audio
+% PCM for 2 - 4 - 8 bits + entropy
+% ADM
+
+% SQNR ~ Iterations
+
+% for picture
+% PCM for 2 - 4 bits
+% SQNR ~ Iterations
+
+
 function [x_q, centers, D, K_max] = lloyd_max(x, N, x_min, x_max)
     range = x_max - x_min;
     step = int32(range / N);

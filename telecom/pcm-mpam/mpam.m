@@ -44,7 +44,7 @@ function mapper = make_mapper(length, type)
         mapper(i) = bits;
         
         if type == "gray"
-            for j = 2:size(bits)
+            for j = 2:size(bits) % xor previous and next one, with the first one intact
                 mapper(i,j) = mod((bits(j-1) + bits(j)), 2);
             end
         end
