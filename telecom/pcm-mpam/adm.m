@@ -1,9 +1,7 @@
 K = 1.5;
 DELTA_INIT = 1;
-N = 8000;
-M = 10000;
 
-function [y] = adm_encoder(x)
+function [y] = adm_encoder(x, M)
     x = interp(x, M);
     y = zeros(size(x));
     delta = zeros(size(x));
@@ -49,7 +47,7 @@ function [y] = adm_encoder(x)
     end
 end
 
-function [x_q] = adm_decoder(b)
+function [x_q] = adm_decoder(b, N)
     x_q = zeros(b);
     delta = zeros(b);
     
