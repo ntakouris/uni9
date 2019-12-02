@@ -2,7 +2,6 @@ ball = im2double(imread('ball.jpg'));
 bg = im2double(imread('beach.jpg'));
 mask = 1 - im2double(imread('ball_mask.jpg'));
 
-
 frame_count = 20;
 
 writerObj = VideoWriter('transf_beach.avi');
@@ -14,45 +13,40 @@ baseline_y = 100;
 baseline_x = 50;
 
 for f = 1:frame_count
-    angle = -mod(((f / frame_count) * 10 * bounce_times * 2), 360);
-    amplitude = (exp((-(f / frame_count) * 4))) * 100; % 100 pixel scale
+    perc = f / frame_count;
+    angle = -mod((perc * 10 * bounce_times * 2), 360);
     
-    offset_y = abs(amplitude * cos(((f / frame_count) * bounce_times * pi)) );
-    offset_x = exp(((f / frame_count) / 5)) * 300; 
+    scale = interp1([0 1], [0.3 0.02], perc);
     
-    scale = interp1([0,1],[1, 0.8], (f / frame_count));
-    %%%%%
+    ball_size = scale * 800;
+    amplitude = interp1([0,1], [200, 0], perc);
+    bounce = abs(amplitude * cos((perc * bounce_times * pi)));
+    
+    offset_x = int32(interp1([0,1], [300, 400], perc) + bounce);
+    offset_y = int32(interp1([0,1], [100, 1300], perc));
     
     scale_ball = imresize(ball, scale);
     scale_mask = imresize(mask, scale);
     
-    rot_ball = imrotate(scale_ball, angle, 'nearest', 'crop');
-    rot_mask = 1 - imrotate(scale_mask, angle, 'nearest', 'crop'); % no need to rotate because it is a circle
+    rot_ball = imrotate(scale_ball, angle);
+    rot_mask = imrotate(scale_mask, angle); % no need to rotate because it is a circle actually
     
     big_ball = zeros(size(bg));
     big_mask = zeros(size(bg));
     
     s = size(rot_ball, 1);
-     
-    root_x = 1000 - int32(s/2);    
-    root_y = 750 - int32(s/2);
     
-    for x = 1:s
-        for y = 1:s
-            if rot_mask(x,y) == 0
-                big_ball(root_x + x, root_y + y, :) = rot_ball(x,y,:);
-                big_mask(root_x + x, root_y + y, :) = 1;
-            end
-        end
-    end
+    fprintf("ball end dims: %d %d\n", offset_x + s, offset_y + s);
+    
+    big_mask(offset_x:(offset_x + s - 1), offset_y:(offset_y + s - 1), :) = rot_mask;
+    big_ball(offset_x:(offset_x + s - 1), offset_y:(offset_y + s - 1), :) = rot_ball;
   
     i = (1-big_mask) .* bg + big_mask .* big_ball;
     i = rescale(i);
     imshow(i)
-%     
-%     writeVideo(writerObj, im2frame(i));
+     
+     writeVideo(writerObj, im2frame(i));
 end
 
 close(writerObj);
 implay('transf_beach.avi');
-% save to transf_beach.mat
