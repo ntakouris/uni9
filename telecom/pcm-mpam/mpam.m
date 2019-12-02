@@ -14,7 +14,7 @@ T_c = 4 * 10 ^-7; % μs
 E_s = 1; % symbol energy
 E_b = E_s / log2(M); % bit energy
 
-SNR = 10 * log10(1 / (2 * log2(M) * GAUSSIAN_S2);
+% SNR = 10 * log10(1 / (2 * log2(M) * GAUSSIAN_S2));
 
 % for demodulation assume coherency
 
@@ -23,8 +23,8 @@ SNR = 10 * log10(1 / (2 * log2(M) * GAUSSIAN_S2);
 input = make_input(L_b);
 map_length = 4;
 
-pad_size = mod(size(input), map_length);
-input = padarray(input, pad_size); 
+pad_size = mod(size(input, 1), map_length);
+input = [input zeros(pad_size)];
 
 [mapper, demapper] = make_mapper(map_length, "normal");
 symbol_length = log2(map_length);
@@ -69,30 +69,49 @@ received = demapped(1:(end - pad_size));
 % random input
 function out = make_input(length)
     out = rand([length 1]);
-    out(input <= 0.5) = 0;
-    out(input > 0.5) = 1;
+    out(out <= 0.5) = 0;
+    out(out > 0.5) = 1;
 end
 
 % mapping
 function [mapper, demapper] = make_mapper(length, type)
-    mapper = zeros(length);
+    mapper = zeros(length, log2(length));
     
     for i = 0:(length-1)
-        bits = dec2bi(i);
-        mapper(i) = bits;
+        bits = dec2binarray(i, log2(length));
+        mapper(i + 1, :) = bits;
         
         if type == "gray"
-            for j = 2:size(bits) % xor previous and next one, with the first one intact
-                mapper(i,j) = mod((bits(j-1) + bits(j)), 2);
+            for j = 2:size(bitnums) % xor previous and next one, with the first one intact
+                mapper(i + 1,j) = mod((bitnums(j-1) + bitnums(j)), 2);
             end
         end
     end
-    
-    demapper = zeros(length);
-    for i = 1:size(mapper)
-        mapped = bi2dec(mapper(i));
-        demapper(mapped) = dec2bi(i);
+        
+    demapper = zeros(length, length);
+    for i = 1:length
+        mapped_symbol = mapper(i, :);
+        demapper(binarray2dec(mapped_symbol) + 1) = i;
     end
+end
+
+function a = dec2binarray(i, digits)
+    b = dec2bin(i, digits);
+        
+    bits = split(b, "");
+    bits = cell2mat(bits(2:(end-1)));
+
+    a = zeros(size(bits));
+    a(bits == '1') = 1;
+    a(bits == '0') = 0;
+end
+
+function a = binarray2dec(i)
+    mappedbits = ['0'];
+    mappedbits(i == 0) = '0';
+    mappedbits(i == 1) = '1';
+    
+    a = bin2dec(mappedbits);
 end
 
 % s_m -> g_t(t)
