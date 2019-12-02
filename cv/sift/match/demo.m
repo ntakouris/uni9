@@ -8,14 +8,18 @@ feat_count = min(size(feat_l, 2), size(feat_r, 2));
 
 feat_matched = zeros(feat_count); % feat_matched(right_idx) = left_idx
 
-for i = 1:size(feat_l,2)
-    if any(feat_matched(:) == 0)
+fprintf("feat_count: %d", feat_count);
+
+for i = 1:size(feat_r,2)
+    if ~any(feat_matched(:) == 0)
         break;
     end
     
+    fprintf("Iteration %d\n", i);
+    
     feat = feat_l(:, i);
     
-    min_dist = -1;
+    min_dist = 99999;
     min_idx = -1;
     
     % find a non-matched one with minimum eucl distance
@@ -30,10 +34,9 @@ for i = 1:size(feat_l,2)
             end
         end
     end
-    
-    if min_dist >= 0 && min_idx >= 1
+        
+    if min_dist > 0 && min_idx >= 1
         feat_matched(min_idx) = i;
+        fprintf("right: %d <--> %d :left | dist: %d\n", min_idx, i, min_dist);
     end
 end
-
-% todo(?) visualize
