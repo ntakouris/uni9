@@ -6,36 +6,27 @@ function [y] = adm_encoder(x, M)
     y = zeros(size(x));
     delta = zeros(size(x));
 
-    x = [x 0];
-    delay = zeros(size(x));
+    delay = zeros(size(x) - 1);
     
     delta(1) = DELTA_INIT;
     
     x_q = 1;
-    if x(1) < 0
-        x_q = -1; % 1 bit quant
+    if x(1) < DELTA_INIT
+        x_q = -1;
     end
-    
-    quantized_x = delta(1) * x_q;
-    
-    y(1) = quantized_x;
+        
+    y(1) = x_q;
     delay(1) = y(1);
-    
-    % first pass out of loop to initialize
-    
-    for n = 1:size(x)
+        
+    for n = 2:size(x)
         e = x(n) - delay(n-1);
-        
-        % step size control (delta(n-1))
-        
+                
         q_e = 1;
-        if e - delay(n-1) < 0
+        if e - delay(n-1) < delta(n-1)
             q_e = -1;
         end
-        
-        quantized_x = delta(n-1) * q_e;
-        
-        y(n) = quantized_x;
+                
+        y(n) = q_e;
         
         if (y(n) == y(n-1))
             delta(n) = delta(n-1) * K;
@@ -43,25 +34,30 @@ function [y] = adm_encoder(x, M)
             delta(n) = delta(n-1) / K;
         end
             
-        delay(n) = quantized_x + delay(n-1);
+        delay(n) = q_e + delay(n-1);
     end
 end
 
-function [x_q] = adm_decoder(b, N)
-    x_q = zeros(b);
-    delta = zeros(b);
+function [y] = adm_decoder(b, N)  
+    y = zeros(size(b));
+    b = [b 0];
     
-    for n = 2:size(b)
-        if b(n) == b(n-1) % is this step control logic inverse of encoding?
+    delay = zeros(size(b) + 1);
+    
+    delta = zeros(b);
+    delta(1) = DELTA_INIT;
+    
+    for n = 1:(size(b) - 1)
+        y(n) = b(n) * delta(n) + delay(n+1);
+        
+        if b(n) == b(n+1)
             delta(n) = delta(n-1) * K;
         else
             delta(n) = delta(n-1) / K;
         end
         
-        e = b(n) * delta(n);
-        
-        x_q(n) = x_q(n-1) + e;
+        delay(n+1) = y(n);
     end
     
-    x_q = interp(x_q, N);
+    y = interp(y, N);
 end

@@ -178,7 +178,7 @@ function val = map_to(s, centers, t)
     
     for i = 1:size(t)
        if (s <= t(i))
-            val = centers(i - 1);
+            val = centers(i);
             break
        end
     end
