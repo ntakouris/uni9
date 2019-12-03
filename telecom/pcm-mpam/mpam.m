@@ -28,8 +28,10 @@ input = [input zeros(pad_size)];
 
 [mapper, demapper] = make_mapper(map_length, "normal");
 symbol_length = log2(map_length);
+
 mapped = zeros((size(input) / map_length) * symbol_length);
 
+%%%
 % convert to symbols
 for i = 1:map_length:(size(input) - map_length + 1)
     chunk = input(i:(i+map_length));
