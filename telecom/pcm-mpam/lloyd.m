@@ -2,86 +2,14 @@ eps = 0.001;
 
 % for audio
 [y,fs] = audioread('speech.wav');
-
+%sound(y,fs)
 audio_min = min(y);
 audio_max = max(y);
 
-pcm_a = zeros(3);
-entropy_a = zeros(3);
-sqnr_a = zeros(3);
-
-pcm_i = zeros(2);
-entropy_i = zeros(2);
-sqnr_i = zeros(2);
-
-[x_q, centers, D, K_max, S] = lloyd_max(y, 4, audio_min, audio_max);
-
-
-% % PCM for 2 - 4 - 8 bits + entropy
-% [pcm, ~, ~, max_i, S] = lloyd_max(y, 2, audio_min , audio_max);
-% entropy = sum(pcm .* log(pcm));
-% 
-% p_signal = mean(pcm.^2);
-% p_noise = mean((y - pcm).^2);
-% 
-% pcm_a(1) = pcm;
-% entropy_a(1) = entropy;
-% sqnr_a(1) = p_signal / p_noise;
-% 
-% [pcm, ~, ~] = simple_pcm(y, 4, audio_min , audio_max);
-% entropy = sum(pcm .* log(pcm));
-% 
-% p_signal = mean(pcm.^2);
-% p_noise = mean((y - pcm).^2);
-% 
-% pcm_a(2) = pcm;
-% entropy_a(2) = entropy;
-% sqnr(2) = p_signal / p_noise;
-% 
-% [pcm, ~, ~] = simple_pcm(y, 8, audio_min , audio_max);
-% entropy = sum(pcm .* log(pcm));
-% 
-% p_signal = mean(pcm.^2);
-% p_noise = mean((y - pcm).^2);
-% 
-% pcm_a(3) = pcm;
-% entropy_a(3) = entropy;
-% sqnr(3) = p_signal / p_noise;
-% 
-% % ADM
-% adm = adm_encoder(y, 10000);
-% decoded_adm = adm_decode(adm, fs);
-% 
-% % SQNR ~ Iterations
-% load cameraman.mat
-% x = i(:); % turn to 1d
-% x = (x-128)/128; % map to [-1, 1]
-% 
-% % for picture
-% % PCM for 2 - 4 bits
-% 
-% [pcm, ~, ~] = simple_pcm(y, 2, -1 , 1);
-% entropy = sum(pcm .* log(pcm));
-% 
-% p_signal = mean(pcm.^2);
-% p_noise = mean((y - pcm).^2);
-% 
-% pcm_i(1) = pcm;
-% entropy_i(1) = entropy;
-% sqnr(1) = p_signal / p_noise;
-% 
-% [pcm, ~, ~] = simple_pcm(y, 4, -1 , 1);
-% entropy = sum(pcm .* log(pcm));
-% 
-% p_signal = mean(pcm.^2);
-% p_noise = mean((y - pcm).^2);
-% 
-% pcm_i(2) = pcm;
-% entropy_i(2) = entropy;
-% sqnr(2) = p_signal / p_noise;
-
-% SQNR ~ Iterations
-% ?? which first shape ?? 
+[x_q, ~, ~, ~, ~] = lloyd_max(y, 8, audio_min, audio_max);
+plot(x_q)
+%entropy = sum(abs(x_q) .* log(abs(x_q)));
+sound(x_q, fs)
 
 % approximate speech by
 m = -0.04;
@@ -115,7 +43,6 @@ function [x_q, centers, D, K_max, S] = lloyd_max(x, N, x_min, x_max)
     step = range / N;
     
     centers = (x_min + (step / 2)):step:(x_max - (step / 2));
-    t = zeros([1 (N-1)]);
     
     d_prev = 100000;
     iteration = 0;
@@ -124,13 +51,22 @@ function [x_q, centers, D, K_max, S] = lloyd_max(x, N, x_min, x_max)
     
     while 1
         % t in the middle of quant centers
+        t = zeros(size(centers)-1);
         for i = 1:(size(centers, 2) - 1)
             t(i) = (centers(i) + centers(i+1)) / 2;
         end
                 
         % mse
-        x_q = arrayfun(@(e) map_to(e, centers, t), x);
-        d = mean((x - x_q).^2);
+        x_out = x;
+        x_out(x_out <= t(1)) = centers(1);
+        x_out(x_out >= t(end)) = centers(end);
+        
+        for i = 1:(size(centers, 2) - 2)
+            idx = x_out > t(i) & x_out <= t(i+1);
+            x_out(idx) = centers(i);
+        end
+        
+        d = mean((x - x_out).^2);
         
         if iteration == 1
             D = [d];
@@ -154,32 +90,22 @@ function [x_q, centers, D, K_max, S] = lloyd_max(x, N, x_min, x_max)
         centers = expected;
         
         % SQNR / iter
-        p_signal = mean(x_q.^2);
-        p_noise = mean((x - x_q).^2);
+        p_signal = mean(x_out.^2);
+        p_noise = mean((x - x_out).^2);
         sqnr = p_signal / p_noise;
         
         S = [S sqnr];
         
-        if (iteration > 1 && d - d_prev < 0)
+        if (iteration > 1 && d - d_prev > 0)
             break;
         end
         
+        x_q = x_out;
+        fprintf("Iteration: %d, D: %f\n", iteration, d);
         d_prev = d;
         
         iteration = iteration + 1;
-        fprintf("Iteration: %d, D: %f", iteration, d);
     end
     
     K_max = iteration;
-end
-
-function val = map_to(s, centers, t) 
-    val = centers(end);
-    
-    for i = 1:size(t)
-       if (s <= t(i))
-            val = centers(i);
-            break
-       end
-    end
 end
