@@ -2,99 +2,101 @@ rng(42069); % for reproducible results
 
 % constants and config
 M = 4;
+PULSE = 1;
+symbol_bits = log2(M);
 
-L_b = 24; % input length
+nums = 0:((M / 2) - 1);
+p = (2.*nums + 1) .* PULSE;
 
-R_symbols = 250 * 10^3; % 250Ksymbols / sec
-T_symbol = 4 * 10 ^-6; % 4 μs
+map = [-flip(p) p];
 
-f_c = 2.5 * 10^6; % hz for transfer rate
-T_c = 4 * 10 ^-7; % μs
-
-E_s = 1; % symbol energy
-E_b = E_s / log2(M); % bit energy
-
-% SNR = 10 * log10(1 / (2 * log2(M) * GAUSSIAN_S2));
-
-% for demodulation assume coherency
-
-% ----- Begin Simulation
+L_b = 12;
 
 input = make_input(L_b);
-map_length = 4;
 
-pad_size = mod(size(input, 1), map_length);
+pad_size = mod(size(input, 1), symbol_bits);
 input = [input zeros(pad_size)];
 
-[mapper, demapper] = make_mapper(map_length, "normal");
-symbol_length = log2(map_length);
+mapped = zeros([int32((size(input, 1) / map_length)) 1]);
 
-mapped = zeros((size(input) / map_length) * symbol_length);
+% convert input to symbols
+for i = 1:symbol_bits:(size(input, 1) - symbol_bits - 1)
+    chunk = input(i:(i + symbol_bits - 1));
+    
+    num = binarray2dec(chunk);
+    symbol = map(num + 1);
+        
+    mapped(i) = symbol;
+end
+
+fc = 2.5 * 10 ^ 6;
+out = zeros([size(mapped) * 4 1]);
+g_t = sqrt(2 / (0.4 ^ 10-6));
+
+for s = 1:size(mapped)
+   ampl = mapped(s);
+   for tick = 1:4 % tsample = 0.1μs, Tc = 0.4μs
+       t = s * 0.4 * 10^-6 + tick * 0.1 * 10^-6; % current time seconds
+       pulse = cos(2 * pi * 2.5 * 10 ^- 6 * t);
+       
+       out((s - 1) * 4 + tick) = ampl * g_t * pulse;
+   end
+end
+
+noise = make_awgn(size(out));
+
+received_raw = out + noise;
+
+r = zeros(size(mapped));
+
+% matched filter
+for s = 1:size(mapped)
+   h = zeros(4,1);
+   filter_out = 0;
+   
+   start = s * 4;
+   samples = received_raw(start:start+3);
+   
+   for tick = 1:4 % tsample = 0.1μs, Tc = 0.4μs
+      t = s * 0.4 * 10^-6 + tick * 0.1 * 10^-6; % current time seconds
+      pulse = cos(2 * pi * 2.5 * 10 ^- 6 * ((4 * 10^-6) -t));
+       
+      h(tick) = g_t * pulse;
+   end
+   
+   res = conv(samples, h, 'same');
+   r(s) = res(1); % 1st or?
+end
+
+received = zeros(size(mapped));
+for s = 1:size(mapped) % decision device
+   val = r(s);
+   
+   for i = 2:size(map)-2
+       if val > (map(i-1) + map(i+1)) / 2 && val <= (map(i) + map(i+1)) / 2
+           received(s) = map(i);
+       end
+   end
+   
+   if val < (map(1) + map(2)) / 2
+       received(s) = map(1);
+   end
+   
+   if val > (map(end) + map(end-1)) / 2
+       received(s) = map(end);
+   end
+end
+
+% SER
+
+% BER
+
 
 %%%
-% convert to symbols
-for i = 1:map_length:(size(input) - map_length + 1)
-    chunk = input(i:(i+map_length));
-    
-    num = bi2de(chunk);
-    symbol = mapper(num);
-    
-    mapped(i:size(symbol)) = symbol;
-end
-
-awgn = make_awgn(size(signal));
-
-
-% pulses
-
-signal = [];
-
-received_raw = signal + awgn;
-% coherent receive
-
-% decision device
-received_symbols = [];
-
-demapped = zeros(size(received_symbols) * symbol_length);
-% demapping
-for i = 1:symbol_length:size(received_symbols)
-    chunk = received_symbols(i:(i+symbol_length));
-    
-    num = bi2de(chunk);
-    data = demapper(num);
-    
-    demapped(i:size(data)) = data;
-end
-
-received = demapped(1:(end - pad_size));
-
-% random input
 function out = make_input(length)
     out = rand([length 1]);
     out(out <= 0.5) = 0;
     out(out > 0.5) = 1;
-end
-
-% mapping
-function [mapper, demapper] = make_mapper(length, type)
-    mapper = zeros(length, log2(length));
-    
-    for i = 0:(length-1)
-        bits = dec2binarray(i, log2(length));
-        mapper(i + 1, :) = bits;
-        
-        if type == "gray"
-            for j = 2:size(bitnums) % xor previous and next one, with the first one intact
-                mapper(i + 1,j) = mod((bitnums(j-1) + bitnums(j)), 2);
-            end
-        end
-    end
-        
-    demapper = zeros(length, length);
-    for i = 1:length
-        mapped_symbol = mapper(i, :);
-        demapper(binarray2dec(mapped_symbol) + 1) = i;
-    end
 end
 
 function a = dec2binarray(i, digits)
@@ -116,25 +118,8 @@ function a = binarray2dec(i)
     a = bin2dec(mappedbits);
 end
 
-% s_m -> g_t(t)
-
-
-% -> cos(2 * pi * f_c * t)
-
-
-% + AWGN -> r(t)
 function noise = make_awgn(length)
     mu = 0;
-    sigma = 1;
+    sigma = 0.25;
     noise = normrnd(mu, sigma, [length 1]);
 end
-
-% ==== Receiver ====
-
-% symbol
-
-% decision device
-
-% demapping
-
-% estimated_out
