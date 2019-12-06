@@ -17,21 +17,21 @@ input = make_input(L_b);
 pad_size = mod(size(input, 1), symbol_bits);
 input = [input zeros(pad_size)];
 
-mapped = zeros([int32((size(input, 1) / map_length)) 1]);
+mapped = zeros([int32((size(input, 1) / symbol_bits)) 1]);
 
 % convert input to symbols
-for i = 1:symbol_bits:(size(input, 1) - symbol_bits - 1)
-    chunk = input(i:(i + symbol_bits - 1));
+for i = 1:size(mapped, 1)
+    start = (i - 1) * symbol_bits;
+    chunk = input((start + 1):(start + symbol_bits));
     
     num = binarray2dec(chunk);
     symbol = map(num + 1);
-        
     mapped(i) = symbol;
 end
 
 fc = 2.5 * 10 ^ 6;
 out = zeros([size(mapped) * 4 1]);
-g_t = sqrt(2 / (0.4 ^ 10-6));
+g_t = sqrt(2 / (0.4 * 10^-6));
 
 for s = 1:size(mapped)
    ampl = mapped(s);
@@ -65,7 +65,7 @@ for s = 1:size(mapped)
    end
    
    res = conv(samples, h, 'same');
-   r(s) = res(1); % 1st or?
+   r(s) = res(2); % 1st or?
 end
 
 received = zeros(size(mapped));
@@ -120,6 +120,6 @@ end
 
 function noise = make_awgn(length)
     mu = 0;
-    sigma = 0.25;
+    sigma = 0;
     noise = normrnd(mu, sigma, [length 1]);
 end
