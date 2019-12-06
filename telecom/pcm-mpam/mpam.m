@@ -30,42 +30,34 @@ for i = 1:size(mapped, 1)
 end
 
 fc = 2.5 * 10 ^ 6;
-out = zeros([size(mapped) * 4 1]);
-g_t = sqrt(2 / (0.4 * 10^-6));
+T_symbol = 4 * 10^-6;
+T_sub = 10^-6;
+g_t = sqrt(2 / T_sub);
 
-for s = 1:size(mapped)
-   ampl = mapped(s);
-   for tick = 1:4 % tsample = 0.1μs, Tc = 0.4μs
-       t = s * 0.4 * 10^-6 + tick * 0.1 * 10^-6; % current time seconds
-       pulse = cos(2 * pi * 2.5 * 10 ^- 6 * t);
-       
-       out((s - 1) * 4 + tick) = ampl * g_t * pulse;
-   end
-end
+out = zeros([size(mapped) * 4 1]);
+
+t = 0:T_sub:(size(mapped, 1) * T_symbol);
+
+wave = cos(2 * pi * fc .* t);
+out = repelem(mapped, 4) .* g_t .* pulse;
+
 
 noise = make_awgn(size(out));
-
 received_raw = out + noise;
 
-r = zeros(size(mapped));
 
+r = zeros(size(mapped));
 % matched filter
-for s = 1:size(mapped)
-   h = zeros(4,1);
-   filter_out = 0;
+for s = 1:size(mapped)   
+   start = (s-1) * 4;
+   samples = received_raw(start+1:start+4);
    
-   start = s * 4;
-   samples = received_raw(start:start+3);
-   
-   for tick = 1:4 % tsample = 0.1μs, Tc = 0.4μs
-      t = s * 0.4 * 10^-6 + tick * 0.1 * 10^-6; % current time seconds
-      pulse = cos(2 * pi * 2.5 * 10 ^- 6 * ((4 * 10^-6) -t));
-       
-      h(tick) = g_t * pulse;
-   end
+   ticks = 1:4;
+   ts = (s-1) * T_symbol + ticks * T_sub;
+   h = g_t * cos(2 * pi * f_c .* ts);
    
    res = conv(samples, h, 'same');
-   r(s) = res(2); % 1st or?
+   r(s) = res(1); % 1st or?
 end
 
 received = zeros(size(mapped));
