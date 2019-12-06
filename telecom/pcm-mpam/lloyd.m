@@ -6,37 +6,13 @@ eps = 0.001;
 audio_min = min(y);
 audio_max = max(y);
 
-[x_q, ~, ~, ~, ~] = lloyd_max(y, 8, audio_min, audio_max);
-plot(x_q)
-%entropy = sum(abs(x_q) .* log(abs(x_q)));
-sound(x_q, fs)
-
-% approximate speech by
-m = -0.04;
-s2 = 0.11;
+[x_q, ~, ~, ~, ~] = lloyd_max(y, 2, audio_min, audio_max);
 
 function [] = show_pcm_image(pcm)
     pcm = 128*pcm + 128;
     y = reshape(pcm, 256, 256);
     imshow(uint8(y));
 end
-
-% function [x_q, centers, d] = simple_pcm(x, N, x_min, x_max)
-%     range = x_max - x_min;
-%     step = int32(range / N);
-%     
-%     centers = x_min:step:x_max;
-%     
-%     t = zeros(N);
-% 
-%     for i = 1:N
-%         t(i) = (centers(i) + centers(i+1)) / 2;
-%     end
-%     
-%     x_q = arrayfun(@(e) map_to(e, centers, t), x);
-%     d = mean((x - x_q).^2);
-% end
-
 
 function [x_q, centers, D, K_max, S] = lloyd_max(x, N, x_min, x_max)
     range = x_max - x_min;
