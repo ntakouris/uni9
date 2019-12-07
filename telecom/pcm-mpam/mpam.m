@@ -24,7 +24,7 @@ for i = 1:size(mapped, 1)
     start = (i - 1) * symbol_bits;
     chunk = input((start + 1):(start + symbol_bits));
     
-    num = binarray2dec(chunk);
+    num = binarray2dec(chunk, "normal");
     symbol = map(num + 1);
     mapped(i) = symbol;
 end
@@ -91,7 +91,8 @@ for i = 1:size(received, 1)
     symbol = received(i);
     mapi = find(map == symbol, 1, 'first');
         
-    bits = dec2binarray(mapi-1, symbol_bits);
+    bits = dec2binarray(mapi-1, symbol_bits, "normal");
+    
     rec_bits(start:(start + symbol_bits - 1)) = bits;
 end
 
@@ -107,7 +108,7 @@ function out = make_input(length)
     out(out > 0.5) = 1;
 end
 
-function a = dec2binarray(i, digits)
+function a = dec2binarray(i, digits, type)
     b = dec2bin(i, digits);
         
     bits = split(b, "");
@@ -116,9 +117,27 @@ function a = dec2binarray(i, digits)
     a = zeros(size(bits));
     a(bits == '1') = 1;
     a(bits == '0') = 0;
+    
+    gray = zeros(size(a));
+    if type == "gray"
+        gray(1) = a(1);
+        for i = 2:size(bits,1)
+            gray(i) = xor(a(i-1), a(i));
+        end
+        a = gray;
+    end    
 end
 
-function a = binarray2dec(i)
+function a = binarray2dec(i, type)
+    gray = zeros(size(i));
+    if type == "gray"
+        gray(1) = i(1);
+        for j = 2:size(bits,1)
+            gray(j) = xor(gray(j-1), i(j));
+        end
+        i = gray;
+    end
+
     mappedbits = ['0'];
     mappedbits(i == 0) = '0';
     mappedbits(i == 1) = '1';
