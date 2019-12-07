@@ -78,6 +78,10 @@ for s = 1:size(mapped) % decision device
    end
 end
 
+% ser
+symbol_errors = sum(mapped ~= received);
+s_prob = symbol_errors / size(out, 2);
+
 rec_bits = zeros(size(input));
 
 % convert received symbols to bits
@@ -91,12 +95,12 @@ for i = 1:size(received, 1)
     rec_bits(start:(start + symbol_bits - 1)) = bits;
 end
 
-% SER
-
 % BER
+bit_erros = sum(input ~= rec_bits);
+b_prob = bit_errors / size(input, 1);
 
 
-%%%
+%%%%%%
 function out = make_input(length)
     out = rand([length 1]);
     out(out <= 0.5) = 0;
