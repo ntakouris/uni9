@@ -34,19 +34,16 @@ T_symbol = 4 * 10^-6;
 T_sub = 10^-6;
 g_t = sqrt(2 / T_sub);
 
-out = zeros([size(mapped) * 4 1]);
-
-t = 0:T_sub:(size(mapped, 1) * T_symbol);
+t = 0:T_sub:((size(mapped, 1) * T_symbol) - T_sub);
 
 wave = cos(2 * pi * fc .* t);
-out = repelem(mapped, 4) .* g_t .* pulse;
-
+out = repelem(mapped' , 4) .* wave;
 
 noise = make_awgn(size(out));
 received_raw = out + noise;
 
-
 r = zeros(size(mapped));
+
 % matched filter
 for s = 1:size(mapped)   
    start = (s-1) * 4;
@@ -54,29 +51,44 @@ for s = 1:size(mapped)
    
    ticks = 1:4;
    ts = (s-1) * T_symbol + ticks * T_sub;
-   h = g_t * cos(2 * pi * f_c .* ts);
+   h = cos(2 * pi * fc .* ts);
    
-   res = conv(samples, h, 'same');
-   r(s) = res(1); % 1st or?
+   res = conv(samples, h);
+   r(s) = -res(1);
 end
 
 received = zeros(size(mapped));
 for s = 1:size(mapped) % decision device
    val = r(s);
    
-   for i = 2:size(map)-2
-       if val > (map(i-1) + map(i+1)) / 2 && val <= (map(i) + map(i+1)) / 2
+   for i = 2:size(map,2)-1
+       low = (map(i-1) + map(i+1)) / 2;
+       high = (map(i) + map(i+1)) / 2;
+       if val >= low && val < high
            received(s) = map(i);
        end
    end
    
-   if val < (map(1) + map(2)) / 2
+   if val <= (map(1) + map(2)) / 2
        received(s) = map(1);
    end
    
-   if val > (map(end) + map(end-1)) / 2
+   if val >= (map(end) + map(end-1)) / 2
        received(s) = map(end);
    end
+end
+
+rec_bits = zeros(size(input));
+
+% convert received symbols to bits
+for i = 1:size(received, 1)
+    start = ((i-1) * symbol_bits) + 1;
+    
+    symbol = received(i);
+    mapi = find(map == symbol, 1, 'first');
+        
+    bits = dec2binarray(mapi-1, symbol_bits);
+    rec_bits(start:(start + symbol_bits - 1)) = bits;
 end
 
 % SER
