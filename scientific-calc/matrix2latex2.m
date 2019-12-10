@@ -1,4 +1,11 @@
 function matrix2latex2(matrix, filename, varargin)
+    % Author:   M. Koehler, T. Ntakouris
+    % Contact:  koehler@in.tum.de, ntakouris@ceid.upatras.gr
+    % Version:  1.2
+    % Date:     December 2019
+    % This software is published under the GNU GPL, by the free software
+    % foundation. For further reading see: http://www.gnu.org/licenses/licenses.html#GPL
+
     rowLabels = [];
     colLabels = [];
     alignment = 'l';

@@ -1,6 +1,7 @@
 function [dflag, discrC, discrR] = dd_check(A)
 % Author: ?. ?????????, ?? 1054332, Date : 10/12/2019
     dflag = 1;
+    dk = 1;
     discrC = 0;
     discrR = 0;
     
@@ -17,8 +18,18 @@ function [dflag, discrC, discrR] = dd_check(A)
            return
         end
         
-        discrR = min(central_e - r, discrR);
-        discrC = min(central_e - c, discrC);
+        if r == central_e
+            dk = 1;
+        else
+            discrR = min(central_e - r, discrR);
+            discrC = min(central_e - c, discrC);
+        end
+    end
+    
+    if dk == 1
+        discr = 0;
+        discr = 0;
+        return
     end
     
     discrR = max(discrR, 0);
