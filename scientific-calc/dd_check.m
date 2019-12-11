@@ -2,6 +2,7 @@ function [dflag, discrC, discrR] = dd_check(A)
 % Author: ?. ?????????, ?? 1054332, Date : 10/12/2019
     dflag = 1;
     dk = 1;
+    
     discrC = 0;
     discrR = 0;
     
@@ -23,8 +24,16 @@ function [dflag, discrC, discrR] = dd_check(A)
         end
         
         if dk ~= 1
-            discrR = min(central_e - r, discrR);
-            discrC = min(central_e - c, discrC);
+            curr_r = central_e - r;
+            curr_c = central_e - c;
+            
+            if i == 1
+                discrR = curr_r;
+                discrC = curr_c;
+            else
+                discrR = min(curr_r, discrR);
+                discrC = min(curr_c, discrC);
+            end
         end
     end
     
