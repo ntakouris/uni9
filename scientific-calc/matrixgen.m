@@ -1,17 +1,17 @@
 % Author: T. Ntakouris - AM 1054332
 
-email = zeros(1133);
-fid = fopen('out.arenas-email');
-tline = fgetl(fid);
-while ischar(tline)
-    elems = split(tline, " ");
-    from = str2num(elems{1});
-    to = str2num(elems{2});
-    
-    email(from, to) = 1;
-    tline = fgetl(fid);
-end
-fclose(fid);
+% email = zeros(1133);
+% fid = fopen('out.arenas-email');
+% tline = fgetl(fid);
+% while ischar(tline)
+%     elems = split(tline, " ");
+%     from = str2num(elems{1});
+%     to = str2num(elems{2});
+%     
+%     email(from, to) = 1;
+%     tline = fgetl(fid);
+% end
+% fclose(fid);
 
 % 
 % % Production of the matrices required at part 3.1
@@ -32,7 +32,7 @@ fclose(fid);
 % 
 % % NM = [[100 10]; [10 100]; [100 100]];
 % 
-% P_100_10 = gen_P(100, 10);
+P_100_10 = gen_P(100, 10);
 % P_10_100 = gen_P(10, 100);
 % P_100_100 = gen_P(100, 100);
 % 
