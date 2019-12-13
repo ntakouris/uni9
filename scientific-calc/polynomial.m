@@ -9,7 +9,8 @@ target_matrix = P_100_10;
 
 I = eye(size(target_matrix));
 e = ones(size(target_matrix, 1), 1);
-b = polyvalm_MV(p, target_matrix, e);
+% b = polyvalm_MV(p, target_matrix, e);
+b = polyval(p, target_matrix) * e;
 
 fprintf("Explicit: \n");
 x = [];
@@ -17,9 +18,8 @@ tic
 x = polyvalm(p, target_matrix) \ b; % explicit
 toc
 
-error = (abs(e - x));
+error = norm(e - x, 2);
 fprintf("Explicit Error -> %f\n", error);
-return;
 
 % as specified on the excercise pdf;
 tolerance = 1e-7;
@@ -41,7 +41,7 @@ for i = 1:size(z,1)
    %[sol ,flag,relres,iter] = pcg(Alpha, beta, tolerance, maxreps);
    
    x(:, 1) = sol;
-   error = sum(abs(e - x(:, 1)));
+   error = norm(e - x(:, 1), 2);
    fprintf("Iteration %d: Error -> %f\n", i, error);
 end
 
