@@ -16,11 +16,11 @@
 
 % 
 % % Production of the matrices required at part 3.1
-N = 1000;
-theta = 0.5;
-kappa = 1.5;
+%N = 1000;
+%theta = 0.5;
+%kappa = 1.5;
 % 
-A = toeplitz([1+kappa ^ theta, 1./((1:N).^2)]);
+%A = toeplitz([1+kappa ^ theta, 1./((1:N).^2)]);
 % 
 % [dflag, discrC, discrR]= dd_check(A);
 % fprintf("cond(A) = %d, condest(A) = %d, dflag = %d, discrC = %d, discrR = %d\n", cond(A), condest(A), dflag, discrC, discrR);
