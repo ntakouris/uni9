@@ -1,8 +1,10 @@
 function P = polyvalm_MV(p, A, b)
-
-    P = zeros(size(A, 1), 1) + p(end);
+% Author: T. NTAKOURIS, AM 1054332, Date : 12/12/2019
+    P = p(1) * A * b; % BLAS-2
     
-    for i = size(p, 2):2
-        P = P + (p(i) * pow(A, size(p, 2) - i)) * b; % blas-2
-    end    
+    for i = 2:(size(p, 2)-1)
+        P = A(P + p(i) * b);  % BLAS-2
+    end   
+    
+    P = P + p(end) * b; % still BLAS-2
 end

@@ -1,4 +1,5 @@
-% Author: T. Ntakouris - AM 1054332
+% Author: T. NTAKOURIS, AM 1054332, Date : 10/12/2019
+% Code for generating or loading from file requested (3.1) matrices
 
 % email = zeros(1133);
 % fid = fopen('out.arenas-email');
@@ -15,17 +16,11 @@
 
 % 
 % % Production of the matrices required at part 3.1
-% N = 1000;
-% theta = 1/2;
+N = 1000;
+theta = 0.5;
+kappa = 1.5;
 % 
-% A = zeros(N);
-% 
-% for i = 1:N
-%     for j = 1:N
-%        A(i, j) = (i - j)^2;
-%     end
-%     A(i,i) = 1 + i^theta;
-% end
+A = toeplitz([1+kappa ^ theta, 1./((1:N).^2)]);
 % 
 % [dflag, discrC, discrR]= dd_check(A);
 % fprintf("cond(A) = %d, condest(A) = %d, dflag = %d, discrC = %d, discrR = %d\n", cond(A), condest(A), dflag, discrC, discrR);

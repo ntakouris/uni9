@@ -1,5 +1,5 @@
 function [dflag, discrC, discrR] = dd_check(A)
-% Author: ?. ?????????, ?? 1054332, Date : 10/12/2019
+% Author: T. NTAKOURIS, AM 1054332, Date : 10/12/2019
     dflag = 1;
     dk = 1;
     

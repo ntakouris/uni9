@@ -1,4 +1,5 @@
-
+% Author: T. NTAKOURIS, AM 1054332, Date : 12/12/2019
+% Code for benching serial + explicit (part 3.2)
 z = [1 14 71 154 120];
 
 % ensure sparsity
