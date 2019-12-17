@@ -1,7 +1,7 @@
 rng(42069); % for reproducible results
 
 % constants and config
-M = 4;
+M = 8;
 PULSE = 1;
 symbol_bits = log2(M);
 
@@ -10,7 +10,7 @@ p = (2.*nums + 1) .* PULSE;
 
 map = [-flip(p) p];
 
-L_b = 12;
+L_b = 100000;
 
 input = make_input(L_b);
 
@@ -62,7 +62,7 @@ for s = 1:size(mapped) % decision device
    val = r(s);
    
    for i = 2:size(map,2)-1
-       low = (map(i-1) + map(i+1)) / 2;
+       low = (map(i-1) + map(i)) / 2;
        high = (map(i) + map(i+1)) / 2;
        if val >= low && val < high
            received(s) = map(i);
@@ -93,13 +93,13 @@ for i = 1:size(received, 1)
         
     bits = dec2binarray(mapi-1, symbol_bits, "normal");
     
-    rec_bits(start:(start + symbol_bits - 1)) = bits;
+    rec_bits(start:(start + symbol_bits - 1)) = bits(:);
 end
 
 % BER
-bit_erros = sum(input ~= rec_bits);
+bit_errors = sum(input ~= rec_bits);
 b_prob = bit_errors / size(input, 1);
-
+b_prob
 
 %%%%%%
 function out = make_input(length)
@@ -147,6 +147,6 @@ end
 
 function noise = make_awgn(length)
     mu = 0;
-    sigma = 0;
+    sigma = (1/4) * 2;
     noise = normrnd(mu, sigma, [length 1]);
 end
