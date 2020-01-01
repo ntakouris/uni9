@@ -24,3 +24,6 @@ List of almost all the projects I made during my studies at the Computer Enginee
 | Set*_askiseis | More Java |
 | telecom | Lloyd-Max, ADM, PCM, MPAM in matlab |
 | drone_approx.cpp | Some embedded system architecture approximation for a drone |
+| json-bison-flex | JSON Parser with flex and bison |
+| julia-dsp | rectangular reconstruction with julia (experiment) |
+| openmp | yes |
