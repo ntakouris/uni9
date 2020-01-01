@@ -11,7 +11,7 @@ function matrix2latex2(matrix, filename, varargin)
     alignment = 'l';
     format = [];
     textsize = [];
-    mstyle = [];
+    mstyle = 'tabular';
     if (rem(nargin,2) == 1 || nargin < 2)
         error('matrix2latex: ', 'Incorrect number of arguments to %s.', mfilename);
     end

@@ -1,25 +1,26 @@
-  /$$$$$$  /$$$$$$$$ /$$$$$$ /$$$$$$$ 
-  
- /$$__  $$| $$_____/|_  $$_/| $$__  $$
- 
-| $$  \__/| $$        | $$  | $$  \ $$
+# uni9
 
-| $$      | $$$$$     | $$  | $$  | $$
+List of almost all the projects I made during my studies at the Computer Engineering department - University Of Patras.
 
-| $$      | $$__/     | $$  | $$  | $$
+## Catalogue
 
-| $$    $$| $$        | $$  | $$  | $$
-
-|  $$$$$$/| $$$$$$$$ /$$$$$$| $$$$$$$/
-
- \______/ |________/|______/|_______/ 
- 
---------------------------------------
-
-Hi there, this is a cloud9 vps. Evdoxos sucks. Centos sucks. It should be ubuntu,
-not centos nor redhat enterprise jesus. No superuser permissions = rip for a
-normal software developer. Bro they don't even allow us to use a normal IDE.
-Use pico or vim they said.... Gosh! At least we've got git and make installed.
-These piece of shit VMs still run java 6. I'll use my trusty 160$ chromebook
-to do all the assignments at c9 or on my desktop. Just pull em and maybe
-make/mvn package crap in order to work.
+| Name        | Content  
+| ------------- |:----------|
+| am2901 | Binary nanoinstruction code for the am2901 along with assembly for testing |
+| at91_asm | Assembly for the at91 proprietary board |
+| c-exc-batch-* | C exercises in 3 batches |
+| compilers/similarity | Cosine similarity in python |
+| cv/pyramids | Gaussian pyramids in matlab |
+| cv/sift | SIFT features in matlab |
+| cv/transformations | Making videos with affine transformations in matlab |
+| databases/sql | MySQL Exercises Code |
+| databases/project | Java Swing UI to interact with a DB |
+| Ergastiriakes_Askiseis | Java Lab Code |
+| HotelReservationService* | CLI in Java - C++ |
+| OperatingSystems | Processes and Tooling with C and bash scripts |
+| project-datastructs | Some Searching algorithms and a Red-Black Tree in java |
+| prolog | ew |
+| scientific-calc | Exceptionally fast numerical methods for special linear algebra systems |
+| Set*_askiseis | More Java |
+| telecom | Lloyd-Max, ADM, PCM, MPAM in matlab |
+| drone_approx.cpp | Some embedded system architecture approximation for a drone |

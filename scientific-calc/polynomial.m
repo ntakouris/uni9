@@ -39,11 +39,11 @@ for k = 1:1
         
         %fprintf("iter %d : x(%d, %d) = L_A(%d, %d) \\ L_b(%d, %d)\n", i, size(x), size(L_A), size(L_b));
         % backslash
-        sol =  L_A \ L_b;
+        %sol =  L_A \ L_b;
 
         % pcg - no precondition
-%         [ans,flag,relres,iter] = pcg(L_A, L_b, tolerance, maxreps);
-%         x(i, :) = ans;
+         [ans, flag, relres, iter] = pcg(L_A, L_b, tolerance, maxreps);
+         sol = ans;
         
         % pcg - jacobi precondition
         % normal jacobi: diag(diag(A))
@@ -54,9 +54,9 @@ for k = 1:1
         
         % cholesky mex
         
-        x(i, :) = sol';
-        err_serial = sum(abs(e - sol'));
-        fprintf("error: %f\n", err_serial)
+        x(i, :) = sol(:);
+        err_serial = sum(abs(e - sol(:)));
+        fprintf("iter: %d error: %f\n", i, err_serial)
     end
 end
 
