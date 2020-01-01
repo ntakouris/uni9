@@ -1,0 +1,64 @@
+{
+	"created_at": "Thu Apr 06 15:24:15 +0000 2017",
+	"id_str": "850006245121695744",
+	"text": "1\/as _df",
+	"user": {
+		"id": 2244994945,
+		"name": "twitterdev",
+		"screen_name": "Twitter Dev",
+		"location": "Internet",
+		"url": "someurl",
+		"description": "somedescription"
+	},
+	"place": {},
+	"retweeted_status": {
+		"text": "Arxikomynhma",
+		"user": {
+			"screen_name": "takis"
+		}
+	},
+	"tweet": {
+		"text": "RT@<arxikosdimiourgos> ypoloipomynhma",
+		"user": {
+			"screen_name": "userwhoretweets"
+		}
+	},
+	"truncated": true,
+	"display_text_range": [0, 140],
+	"extended_tweet": {
+		"full_text": "asdf",
+		"display_text_range": [0, 140],
+		"entities": {
+			"hashtags": [
+				{
+					"text": "hashtag1",
+					"indices": [2, 5]
+				},
+				{
+					"text": "hashtag2",
+					"indices": [7, 9]
+				}
+			]
+		}
+	},
+	"entities": {
+		"hashtags": [],
+		"urls": [
+			{
+				"url": "https:\/\/t.co\/XweGngmxlP",
+				"unwound": {
+					"url": "https:\/\/cards.twitter.com\/cards\/18ce53wgo4h\/3xo1c",
+					"title": "Building the Future of the Twitter API Platform"
+				}
+			},
+			{
+				"url": "https:\/\/t.co\/XweGngmxlP",
+				"unwound": {
+					"url": "https:\/\/cards.twitter.com\/cards\/18ce53wgo4h\/3xo1c",
+					"title": "Building the Future of the Twitter API Platform"
+				}
+			}
+		],
+		"user_mentions": []
+	}
+}

@@ -1,5 +1,5 @@
 function T = b2t(A, m, n)
-% Author: ?. ?????????, ?? 1054332, Date : 10/12/2019
+% Author: T. NTAKOURIS, AM 1054332, Date : 10/12/2019
     T = tenzeros([m m n n]);
 
     for i = 1:m % n x n blocks
