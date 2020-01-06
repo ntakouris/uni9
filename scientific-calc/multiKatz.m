@@ -3,11 +3,10 @@ function [X] = multiKatz(A, alpha, mth, pcg_params)
     n = length(A);
     e = ones(n, 1);
     
+    
     if mth == "direct"
        tic;
-       for i = 1:length(alpha)
-          X(:, i) = (eye(n) - alpha(i) * A')\e;
-       end
+        X(:, i) = A_ \ e;
        toc;
     end
     
@@ -17,22 +16,41 @@ function [X] = multiKatz(A, alpha, mth, pcg_params)
         if length(pcg_params < 3)
            tic;
            for i = 1:length(alpha)
-              X(:, i) = pcg(eye(n) - alpha(i) * A', e, tol, iter_limit);
+               A_ = eye(n) - alpha(i) * A';
+              [sol ,flag,~,~, resvec] = pcg(A_, e, tol, iter_limit);
+              X(:, i) = sol;
+              
+              if flag == 0
+                fprintf("Converged for a = %d", alpha(i))
+                residuals = resvec;
+                fprintf("%d iterations", iter);
+              end
            end
            toc;
         else
             prec = pcg_params{3};
             if prec == "ichol"
-                M = [];
+
               tic;
               for i = 1:length(alpha)
-                X(:, i) = pcg(eye(n) - alpha(i) * A', e, tol, iter_limit, M);
+                A_ = eye(n) - alpha(i) * A';
+                L = ichol(A_);
+
+                [sol ,flag,~,iter, resvec] = pcg(A_, e, tol, iter_limit, L, L');
+                X(:, 1) = sol;
+                
+                if flag == 0
+                  fprintf("Converged for a = %d", alpha(i))
+                  residuals = resvec;
+                  fprintf("%d iterations", iter);
+                end
               end
+
               toc;
             end
         end
     end
     
-    xhat = X(:, 1);
-    dist = norm(e - A * xhat, 2);
+    %xhat = X(:, 1);
+    %dist = norm(e - A * xhat, 2);
 end
