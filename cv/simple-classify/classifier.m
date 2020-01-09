@@ -1,7 +1,10 @@
-train_im = load_from_dir('train');
+convert2hsv = 0;
+
+fprintf("Reading images\n");
+train_im = load_from_dir('train', convert2hsv);
 train_segm = load_from_dir('train_seg');
 
-test_im = load_from_dir('test');
+test_im = load_from_dir('test', convert2hsv);
 test_segm = load_from_dir('test_seg');
 
 
@@ -9,6 +12,8 @@ X = zeros([1920*1080*numel(train_im) 3]);
 classnames = {'skin', 'noskin'}; % skin = 1, noskin = 0;
 Y = zeros([size(X, 1) 1]);
 
+fprintf("Preparing X and Y train\n");
+tic;
 for k = 1:numel(train_segm)
     seg = train_segm{k};
     t = train_im{k};
@@ -21,25 +26,20 @@ for k = 1:numel(train_segm)
     X(idx) = t;
     Y(idx) = seg;
 end
+toc;
 
-nb = fitcnb(X, Y);
+fprintf("Training\n");
+tic;
+cf = fitcnb(X, Y);
 % svm = fitcsvm(X, Y);
-
-for k = 3:length(test_f)
-  img = imread(test_f(k).name);
-  % img = rgb2hsv(img);
-  test_im{k-2} = img;
-end
-
-for k = 3:length(test_segm_f)
-  img = imread(train_segm_f(k).name);
-  test_segm{k-2} = img;
-end
+toc;
 
 Y_Pred = zeros(size(Y));
 
 pred_segm = {};
 
+fprintf("Testing\n");
+tic;
 for k = 1:numel(test_segm)
     seg = test_segm{k};
     t = test_im{k};
@@ -51,23 +51,36 @@ for k = 1:numel(test_segm)
     
     X(idx) = t;
     Y(idx) = seg;
-    % pred = ...
+    labels = predict(cf, X);
+    pred = zeros([length(idx) 1]);
+    
     % tresholding
-    % 
-    % t = 0.7 * p_ns / 0.3 * p_ns
-    % pred(pred >= t) = 1
-    % pred(pred < t) = 0
-    % Y_Pred(idx) = pred;
-    %pred_segm{k} = reshape(pred_seg, [1080 1920 1]);
-    % visualize(reshape(t, [1080 1920 3]), pred_segm{k});
+    trues = labels(:, 1) > 1.3 * labels(:, 2);
+    pred(trues) = 1;
+    
+    Y_Pred(idx) = pred;
+    pred_segm{k} = reshape(pred_seg, [1080 1920 1]);
+    visualize(reshape(t, [1080 1920 3]), pred_segm{k});
 end
-% metrics, on Y and Y_Pred
-incorrect_px = length(find(Y_Pred ~= Y));
-correct_px = length(find(Y_Pred == Y));
-total_px = length(Y);
+toc;
 
-fprintf("% Precision %f", (correct_px - incorrect_px) / total_px);
-fprintf("% Accuracy %f", correct_px / total_px);
+fprintf("\n\nMetrics:\n\n");
+truepos = length(find(Y_Pred == 1 && Y == 1));
+falsepos = length(find(Y_Pred == 1 && Y == 0));
+falseneg = length(find(Y_Pred == 0 && Y == 1));
+trueneg = length(find(Y_Pred == 0 && Y == 0));
+
+total = length(Y);
+
+accuracy = (truepos + trueneg) / total;
+precision = truepos / (truepos + falsepos);
+recall = truepos / (truepos + falseneg);
+f1 = 2 * (precision * recall) / (precision + recall);
+
+fprintf("Precision %f\n", precision);
+fprintf("Accuracy %f\n", accuracy);
+fprintf("Recall %f\n", recall);
+fprintf("F1 %f\n", f1);
 
 
 function imgs = load_from_dir(dir, varargin)    
@@ -76,7 +89,7 @@ function imgs = load_from_dir(dir, varargin)
         convert = varargin{1};
     end
     f = dir('train_seg');
-    imgs = {};
+    imgs = cell([length(f) 1]);
 
     for k = 3:length(f)
       img = imread(f(k).name);
@@ -91,9 +104,14 @@ end
 
 function [] = visualize(img, seg)
     vis = img;
-    %vis = hsv2rgb(img);
+    if convert2hsv == 1    
+        vis = hsv2rgb(img);
+    end
     
-    vis = vis + vis .* seg * 0.5;
+    vis_r = vis .* seg .* [255 0 0];
+    
+    vis = vis * 0.5 + vis_r * 0.5;
+    
     figure
     imshow(vis)
 end
