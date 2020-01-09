@@ -99,7 +99,6 @@ end
 % BER
 bit_errors = sum(input ~= rec_bits);
 b_prob = bit_errors / size(input, 1);
-b_prob
 
 %%%%%%
 function out = make_input(length)
