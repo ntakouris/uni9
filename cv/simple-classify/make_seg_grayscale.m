@@ -12,6 +12,9 @@ function [] = make_dir_grayscale(d)
           img = rgb2gray(img);
       end
       
+      img(img > 255/2) = 255;
+      img(img < 255/2) = 0;
+      
       imwrite(img, file);
     end
 end
