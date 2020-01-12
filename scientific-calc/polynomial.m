@@ -4,6 +4,7 @@
 p = [1 14 71 154 120]';
 
 % ensure sparsity
+block_size = 0;
 target_matrix = P_100_10;
 % target_matrix = sparse(target_matrix); if not already sparse
 
@@ -55,35 +56,3 @@ for i = 1:size(z,1)
    fprintf("Iteration %d: Error -> %f\n", i, error);
 end
 toc
-
-fprintf("pcg: \n");
-
-tic;[x ,~,~,~] = pcg(target_matrix, b, tolerance, maxreps);toc
-
-error = norm(e - x, 2);
-fprintf("pcg Error -> %f\n", error);
-
-return;
-fprintf("pcg (block jacobi): \n");
-
-M = [];
-tic;[x ,~,~,~] = pcg(target_matrix, b, tolerance, maxreps, M);toc
-
-error = norm(e - x, 2);
-fprintf("pcg (block jacobi) Error -> %f\n", error);
-
-return;
-fprintf("chol_btr: \n");
-
-tic;toc;
-
-error = norm(e - x, 2);
-fprintf("chol_btr Error -> %f\n", error);
-
-return;
-fprintf("chol_btr_mex: \n");
-
-tic;toc;
-
-error = norm(e - x, 2);
-fprintf("chol_btr_mex Error -> %f\n", error);

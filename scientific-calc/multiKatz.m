@@ -5,39 +5,41 @@ function [X] = multiKatz(A, alpha, mth, pcg_params)
     
     
     if mth == "direct"
-       tic;
-        X(:, i) = A_ \ e;
-       toc;
+       tic
+       for i = 1:length(alpha)
+         X(i, :) = A_ \ e;
+       end
+       toc
     end
     
     if mth == "pcg"        
         tol = pcg_params{1};
         iter_limit = pcg_params{2};
         if length(pcg_params < 3)
-           tic;
+           tic
            for i = 1:length(alpha)
-               A_ = eye(n) - alpha(i) * A';
+              A_ = eye(n) - alpha(i) * A';
               [sol ,flag,~,~, resvec] = pcg(A_, e, tol, iter_limit);
-              X(:, i) = sol;
+              X(i, :) = sol;
               
               if flag == 0
-                fprintf("Converged for a = %d", alpha(i))
+                fprintf("Converged for a = %d in", alpha(i))
                 residuals = resvec;
-                fprintf("%d iterations", iter);
+                fprintf("%d iterations\n", iter);
               end
            end
-           toc;
+           toc
         else
             prec = pcg_params{3};
             if prec == "ichol"
 
-              tic;
+              tic
               for i = 1:length(alpha)
                 A_ = eye(n) - alpha(i) * A';
                 L = ichol(A_);
 
                 [sol ,flag,~,iter, resvec] = pcg(A_, e, tol, iter_limit, L, L');
-                X(:, 1) = sol;
+                X(i, :) = sol;
                 
                 if flag == 0
                   fprintf("Converged for a = %d", alpha(i))
@@ -46,7 +48,7 @@ function [X] = multiKatz(A, alpha, mth, pcg_params)
                 end
               end
 
-              toc;
+              toc
             end
         end
     end
