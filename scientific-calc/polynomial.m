@@ -2,18 +2,22 @@
 % Code for benching serial + explicit (part 3.2)
 
 p = [1 14 71 154 120]';
-z = roots(p);
 
 % ensure sparsity
+block_size = 0;
 target_matrix = P_100_10;
+% target_matrix = sparse(target_matrix); if not already sparse
 
-I = eye(size(target_matrix));
 e = ones(size(target_matrix, 1), 1);
-% b = polyvalm_MV(p, target_matrix, e);
-b = polyval(p, target_matrix) * e;
+b = polyvalm_MV(p, target_matrix, e);
+% above line same as b = polyval(p, target_matrix) * e;
 
 fprintf("Explicit: \n");
-tic; x = polyvalm(p, target_matrix) \ b; toc; % explicit
+C = polyvalm(p, A);
+
+tic
+x = C \ b; % explicit
+toc 
 
 error = norm(e - x, 2);
 fprintf("Explicit Error -> %f\n", error);
@@ -23,6 +27,8 @@ tolerance = 1e-7;
 maxreps = 50;
 
 x = zeros(size(b, 1), size(p, 1));
+z = roots(p);
+I = eye(size(target_matrix));
 
 tic
 for i = 1:size(z,1)
@@ -33,46 +39,20 @@ for i = 1:size(z,1)
    end
    
    % solve Alpha x(i) = x(i-1)
-   % sol = Alpha \ beta;
+   sol = Alpha \ beta;
    
    % pcg - no precondition
    %[sol ,flag,relres,iter] = pcg(Alpha, beta, tolerance, maxreps);
    
-   x(:, 1) = sol;
-   error = norm(e - x(:, 1), 2);
+   % pcg - block jacobi precondition
+   %[sol ,flag,relres,iter] = pcg(Alpha, beta, tolerance, maxreps);
+   
+   % block cholesky matlab
+   
+   % block cholesky mex
+   
+   x(:, i) = sol;
+   error = norm(e - x(:, i), 2);
    fprintf("Iteration %d: Error -> %f\n", i, error);
 end
 toc
-
-
-fprintf("pcg: \n");
-
-tic;[x ,~,~,~] = pcg(target_matrix, b, tolerance, maxreps);toc
-
-error = norm(e - x, 2);
-fprintf("pcg Error -> %f\n", error);
-
-return;
-fprintf("pcg (block jacobi): \n");
-
-M = [];
-tic;[x ,~,~,~] = pcg(target_matrix, b, tolerance, maxreps, M);toc
-
-error = norm(e - x, 2);
-fprintf("pcg (block jacobi) Error -> %f\n", error);
-
-return;
-fprintf("chol_btr: \n");
-
-tic;toc;
-
-error = norm(e - x, 2);
-fprintf("chol_btr Error -> %f\n", error);
-
-return;
-fprintf("chol_btr_mex: \n");
-
-tic;toc;
-
-error = norm(e - x, 2);
-fprintf("chol_btr_mex Error -> %f\n", error);
