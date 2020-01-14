@@ -10,7 +10,7 @@ e = ones(size(email, 1), 1);
 % find min and max a that makes sense
 fprintf("Finding which a result to invertible matrix\n");
 tic
-a = a(det(I - a * email') ~= 0 && (I - a * email') * e > 0);
+a = a(det(I - a * email') ~= 0 & (I - a * email') * e > 0);
 toc
 
 max_a = max(a);
