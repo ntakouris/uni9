@@ -3,24 +3,21 @@
 
 p = [1 14 71 154 120]';
 
-% ensure sparsity
-block_size = 0;
-target_matrix = P_100_10;
-% target_matrix = sparse(target_matrix); if not already sparse
+target_matrix = C_;
 
 e = ones(size(target_matrix, 1), 1);
 b = polyvalm_MV(p, target_matrix, e);
 % above line same as b = polyval(p, target_matrix) * e;
 
 fprintf("Explicit: \n");
-C = polyvalm(p, A);
+C = polyvalm(p, target_matrix);
 
 tic
 x = C \ b; % explicit
 toc 
 
 error = norm(e - x, 2);
-fprintf("Explicit Error -> %f\n", error);
+fprintf("Explicit Error -> %e\n", error);
 
 % as specified on the excercise pdf;
 tolerance = 1e-7;
@@ -30,6 +27,7 @@ x = zeros(size(b, 1), size(p, 1));
 z = roots(p);
 I = eye(size(target_matrix));
 
+fprintf("Serial backslash\n");
 tic
 for i = 1:size(z,1)
    Alpha = (target_matrix - z(i)*I);
@@ -40,19 +38,47 @@ for i = 1:size(z,1)
    
    % solve Alpha x(i) = x(i-1)
    sol = Alpha \ beta;
+
+   x(:, i) = sol;
+   error = norm(e - x(:, i), 2);
+   fprintf("Iteration %d: Error -> %e\n", i, error);
+end
+toc
+
+fprintf("pcg no prec\n");
+tic
+for i = 1:size(z,1)
+   Alpha = (target_matrix - z(i)*I);
+   beta = b;
+   if i > 1
+       beta = x(:, i-1);
+   end
    
+   % solve Alpha x(i) = x(i-1)
    % pcg - no precondition
-   %[sol ,flag,relres,iter] = pcg(Alpha, beta, tolerance, maxreps);
-   
-   % pcg - block jacobi precondition
-   %[sol ,flag,relres,iter] = pcg(Alpha, beta, tolerance, maxreps);
-   
-   % block cholesky matlab
-   
-   % block cholesky mex
+   [sol ,flag,relres,iter] = pcg(Alpha, beta, tolerance, maxreps);
    
    x(:, i) = sol;
    error = norm(e - x(:, i), 2);
-   fprintf("Iteration %d: Error -> %f\n", i, error);
+   fprintf("Iteration %d: Error -> %e\n", i, error);
+end
+toc
+
+fprintf("pcg block jacobi\n");
+tic
+for i = 1:size(z,1)
+   Alpha = (target_matrix - z(i)*I);
+   beta = b;
+   if i > 1
+       beta = x(:, i-1);
+   end
+   
+   % pcg - block jacobi precondition
+   M = diag(diag(Alpha));
+   [sol ,flag,relres,iter] = pcg(Alpha, beta, tolerance, maxreps, M);
+
+   x(:, i) = sol;
+   error = norm(e - x(:, i), 2);
+   fprintf("Iteration %d: Error -> %e\n", i, error);
 end
 toc

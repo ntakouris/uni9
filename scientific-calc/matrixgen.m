@@ -1,6 +1,9 @@
 % Author: T. NTAKOURIS, AM 1054332, Date : 10/12/2019
 % Code for generating or loading from file requested (3.1) matrices
 
+% load bcsstm07.m
+% bcs = Problem.A;
+
 % email = zeros(1133);
 % fid = fopen('out.arenas-email');
 % tline = fgetl(fid);
@@ -16,18 +19,17 @@
 
 % 
 % % Production of the matrices required at part 3.1
-%N = 1000;
-%theta = 0.5;
-%kappa = 1.5;
-% 
-%A = toeplitz([1+kappa ^ theta, 1./((1:N).^2)]);
+N = 1000;
+theta = 0.5;
+kappa = 1.5; 
+C_ = toeplitz([1+kappa ^ theta, 1./((1:N).^2)]);
 % 
 % [dflag, discrC, discrR]= dd_check(A);
 % fprintf("cond(A) = %d, condest(A) = %d, dflag = %d, discrC = %d, discrR = %d\n", cond(A), condest(A), dflag, discrC, discrR);
 % 
 % % NM = [[100 10]; [10 100]; [100 100]];
 % 
-P_100_10 = gen_P(100, 10);
+% P_100_10 = gen_P(100, 10);
 % P_10_100 = gen_P(10, 100);
 % P_100_100 = gen_P(100, 100);
 % 

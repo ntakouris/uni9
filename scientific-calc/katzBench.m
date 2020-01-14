@@ -49,5 +49,5 @@ function [] = show_top5(x)
     top5 = find(x >= m(end));
     top5 = sort(top5, 'descend');
     
-    fprintf("top5: %d\n", top5);
+    fprintf("top5: %d \n", top5);
 end
