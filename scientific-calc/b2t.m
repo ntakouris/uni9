@@ -1,11 +1,6 @@
-function T = b2t(A)
+function T = b2t(A, m, n)
 % Author: T. NTAKOURIS, AM 1054332, Date : 10/12/2019
-    b = 10;
-    if nargin == 2
-        b = varargin{1};
-    end
-    m = length(A) / b;
-    T = tenzeros([m m b b]);
+    T = tenzeros([m m n n]);
 
     for i = 1:m % n x n blocks
         for j = 1:m
