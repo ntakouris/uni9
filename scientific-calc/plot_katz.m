@@ -1,9 +1,9 @@
 % Author:  T. Ntakouris, AM 1054332, Date : 1/15/2019
 
 figure;
-semilogy(0:it1,r1/norm(e),'b-o');
+semilogy(0:length(r1)-1,r1/norm(e),'b-o');
 hold on;
-semilogy(0:it2,r2/norm(e),'r-x');
+semilogy(0:length(r2)-1,r2/norm(e),'r-x');
 legend('no prec','ichol');
 
 xlabel('iteration number');
