@@ -2,7 +2,7 @@ mill = im2double(imread('windmill.png'));
 bg = im2double(imread('windmill_back.jpeg'));
 mask = 1 - im2double(imread('windmill_mask.png'));
 
-frame_count = 10;
+frame_count = 20;
 
 writerObj = VideoWriter('transf_windmill.avi');
 writerObj.FrameRate = 24;
@@ -12,7 +12,7 @@ method = 'nearest';
 for f = 1:frame_count
     fprintf('Proccessing frame %d of %d\n', f, frame_count)
     
-    theta = (f / frame_count) * 20;
+    theta = (f / frame_count) * 360;
         
     rot_mill = imrotate(mill, theta, 'nearest', 'crop');
     rot_mask = 1 - imrotate(mask, theta, 'nearest', 'crop');
