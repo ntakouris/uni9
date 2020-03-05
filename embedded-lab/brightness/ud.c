@@ -47,7 +47,7 @@ int main(int argc, const char *argv[])
         if (pwm < 0){ pwm = 0;}
         if (pwm > 100) {pwm = 100;}	
         
-        printf("pwm = %u", pwm);
+        printf("pwm = %u\n", pwm);
 
         // pwm modulation %
         for (int i = 0; i < 100; i++) {

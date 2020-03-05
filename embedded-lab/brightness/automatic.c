@@ -85,7 +85,7 @@ int main(int argc, const char *argv[])
         if (pwm < 0){ pwm = 0; direction = DIRECTION_UP;}
         if (pwm > 100) {pwm = 100; direction = DIRECTION_DOWN;}	
         
-        printf("pwm = %u", pwm);
+        printf("pwm = %u\n", pwm);
 
         // pwm modulation %
         for (int k = 0; k < 20; k++) {
@@ -112,7 +112,7 @@ void FIQ_handler(void)
     unsigned int data_out;
     fiq = aic->IPR;
     // ΕΝΤΟΠΙΣΜΟΣ ΠΕΡΙΦΕΡΕΙΑΚΟΥ ΠΟΥ ΠΡΟΚΑΛΕΣΕ ΤΗ ∆ΙΑΚΟΠΗ 
-    if (fiq & (1 << PIOA_ID))
+    if (fiq & (1 << PIOA_ID)) 
     {
         // ΕΛΕΓΧΟΣ ΓΙΑ PIOA 
         data_in = pioa->ISR;
