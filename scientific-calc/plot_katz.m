@@ -1,22 +1,13 @@
-a = 0.01;
-% fill x1 x2 and a
-x1 = [];
-y1 = range(size(x1, 1));
+% Author:  T. Ntakouris, AM 1054332, Date : 1/15/2019
 
-x2 = [];
-y2 = range(size(x2, 1));
+figure;
+semilogy(0:length(r1)-1,r1/norm(e),'b-o');
+hold on;
+semilogy(0:length(r2)-1,r2/norm(e),'r-x');
+legend('no prec','ichol');
 
-% blue continuous line with o marker and red continuous line with x marker
-figure
-hold on
-title("Katz (a = " + a + ") for email matrix")
+xlabel('iteration number');
+ylabel('relative residual');
+title("Katz (a = 0.03) for email")
 
-xlabel("iteration")
-ylabel("norm 2 of error")
-
-plot(x1, y1, 'b-o')
-plot(x2, y2, 'r-x')
-
-legend('pcg','pcg+ichol')
-
-hold off
+hold off;
