@@ -18,36 +18,34 @@
 #define LED_IDLE 0
 #define LED_FLASHING 1
 
-#define STATE_IDLE 0
-#define STATE_HOLD 1
+#define STATE_RED 0
+#define STATE_ORANGE 1
+#define STATE_GREEN 2
 
-unsigned int clock_state = STATE_IDLE;
+unsigned int fanari = STATE_GREEN;
 
 void FIQ_handler(void);
 PIO *pioa = NULL;
 AIC *aic = NULL;
 TC *tc = NULL;
+
 unsigned int button_state = BUT_IDLE;
-unsigned int led_state = LED_IDLE;
 
 unsigned int ticks = 0;
 
-unsigned int led1 = 0x0;
-unsigned int led2 = 0x1;
-unsigned int led0 = 0x0;
+unsigned int led_green = 0x0;
+unsigned int led_orange = 0x1;
+unsigned int led_red = 0x0;
 
 unsigned int btn = 0x3;
 
-unsigned int display_clk = 1, display_idle = 0;
-unsigned int hold_ticks = 0;
-unsigned int clock_rst = 0;
 
 int main(int argc, const char *argv[])
 {
     unsigned int gen;
     STARTUP;
     // ΑΡΧΙΚΟΠΟΙΗΣΗ ΣΥΣΤΗΜΑΤΟΣ 
-    tc->Channel_0.RC = 8192 / 2; // interrupt every 0.5s
+    tc->Channel_0.RC = 8192 ; // interrupt every 1s
     // ΠΕΡΙΟ∆ΟΣ 1 ∆ΕΥΤΕΡΟΛΕΠΤΟ 
     tc->Channel_0.CMR = 2084;
     // SLOW CLOCK, WAVEFORM, D ISABLE CLK ON RC COMPARE 
@@ -63,9 +61,10 @@ int main(int argc, const char *argv[])
     // ΕΝΕΡΓΟΠΟΙΗΣΗ ΣΤΗ ΓΡΑΜΜΗ 0 : PULL−UP 
     pioa->ODR = btn;
     // ΓΡΑΜΜΗ 0 : ΛΕΙΤΟΥΡΓΙΑ ΕΙΣΟ∆ΟΥ 
-    pioa->CODR = led0 | led1 | led2;
+    pioa->CODR = led_orange | led_red;
+    pioa->SODR = led_green;
     // ΓΡΑΜΜΗ 1 : ∆ΥΝΑΜΙΚΟ ΕΞΟ∆ΟΥ LOW 
-    pioa->OER = led0 | led1 | led2;
+    pioa->OER = led_green | led_orange | led_red;
     // ΓΡΑΜΜΗ 1 : ΛΕΙΤΟΥΡΓΙΑ ΕΞΟ∆ΟΥ 
     gen = pioa->ISR;
     // PIOA : ΕΚΚΑΘΑΡΙΣΗ ΑΠΟ ΤΥΧΟΝ ∆ΙΑΚΟΠΕΣ 
@@ -75,54 +74,10 @@ int main(int argc, const char *argv[])
     aic->ICCR = (1 << PIOA_ID) | (1 << TC0_ID);
     // AIC : ΕΚΚΑΘΑΡΙΣΗ ΑΠΟ ΤΥΧΟΝ ∆ΙΑΚΟΠΕΣ 
     pioa->IER = btn;
-    unsigned int data_out;
 
     while (getchar() != 'e')
     {
-        if (clock_rst == 1) {
-            clock_rst = 0;
-            pioa->CODR = led0 | led1 | led2;
-        }
-
-        // runs 2 times for each second
-        if (display_clk == 1) {
-            display_clk = 0;
-            display_idle++;
-
-            // flip led 1
-            data_out = pioa->ODSR;
-            pioa->SODR = data_out | led1;
-            pioa->CODR = data_out & led1;
-        }
-
-        // runs each second
-        if (display_clk == 2) {
-            display_clk = 0;
-            display_idle++;
-
-            printf("%u s", ticks);
-
-            int first_digit = ticks % 10;
-            int second_digit = (ticks / 10) % 10;
-            
-            if (second_digit != 0) {
-                int t = 10 / second_digit;
-
-                if (first_digit % t == 0) {
-                    pioa->SODR = data_out | led2;
-                    pioa->CODR = data_out & led2;
-                }
-            }
-        }
-
-        // runs each 2 seconds
-        if (display_idle == 2) {
-            if (clock_state == STATE_HOLD) {
-                // flip led0
-                pioa->SODR = data_out | led0;
-                pioa->CODR = data_out & led0;
-            }
-        }
+        
     }
 
     aic->IDCR = (1 << PIOA_ID) | (1 << TC0_ID);
@@ -132,8 +87,9 @@ int main(int argc, const char *argv[])
     return 0;
 }
 
-unsigned int press_time = 0;
-unsigned int subtick = 0;
+unsigned int walk_request = 0;
+unsigned int red_ticks = 0;
+unsigned int red_scheduled = 1;
 
 void FIQ_handler(void)
 {
@@ -157,32 +113,15 @@ void FIQ_handler(void)
             if (button_state == BUT_IDLE)
             {
                 button_state = BUT_PRESSED;
-                press_time = time(NULL);
-                // button down event
                 
-                if (clock_state == STATE_IDLE) {
-                    clock_state = STATE_HOLD;
-                    hold_ticks = ticks;
-
-                    pioa->SODR = led0;
-                } else if (clock_state == STATE_HOLD) {
-                    clock_state = STATE_IDLE;
-
-                    pioa->CODR = led0;
-                }
-
+                // diavasi
+                walk_request = 1;
             }
         }
         else
         {
             if (button_state == BUT_PRESSED){
                 button_state = BUT_IDLE;
-
-                if (time(NULL) - press_time > 1) {
-                    clock_state = STATE_IDLE;
-                    ticks = 0;
-                    clock_rst = 1;
-                }
             }
         }
     }
@@ -196,22 +135,41 @@ void FIQ_handler(void)
         // ΕΚΚΑΘΑΡΙΣΗ ∆ΙΑΚΟΠΗΣ ΚΑΙ ΑΠΟ AIC 
         data_out = pioa->ODSR;
         // ΑΝΑΓΝΩΣΗ ΤΙΜΩΝ ΕΞΟ∆ΟΥ 
-        subtick++;
-
-        // always increment clock
         ticks++;
 
-        if (ticks > 59) {
-            ticks = 0;
-            clock_rst = 1;
-        }
+        if (fanari == STATE_GREEN && walk_request == 1) {
+            fanari = STATE_ORANGE;
+            
+            pioa->CODR = led_green;
+        } else if (fanari == STATE_ORANGE && walk_request == 1) {
+            // blink orange 
+            walk_request = 0;
 
-        if (subtick < 2) {
-            subtick++;
-            if (clock_state == STATE_IDLE) {
-                display_clk = 1;
+            pioa->CODR = led_green;
+            pioa->SODR = led_orange;
+        } else if (fanari == STATE_ORANGE && walk_request == 0) {
+            // red
+            fanari == STATE_RED;
+        }else if (fanari == STATE_RED) {
+            if (red_scheduled == 1) {
+                pioa->CODR = led_orange;
+                pioa->SODR = led_red;
+                red_scheduled = 0;
+            }else{
+                red_ticks++;
+
+                if (red_ticks == 10) {  // reset to green
+                    fanari = STATE_GREEN;
+                    red_ticks = 0;
+                    ticks = 0;
+
+                    walk_request = 0;
+                    red_scheduled = 0;
+
+                    pioa->CODR = led_red;
+                    pioa->SODR = led_green;
+                }
             }
-            display_clk = 1;
         }
         
         // re-count from initial config
