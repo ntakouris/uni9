@@ -31,13 +31,13 @@ int main(int argc, const char *argv[])
     tc->Channel_0.RC = 8192;
     // ΠΕΡΙΟ∆ΟΣ 1 ∆ΕΥΤΕΡΟΛΕΠΤΟ 
     tc->Channel_0.CMR = 2084;
-    // SLOW CLOCK, WAVEFORM, D ISABLE CLK ON RC COMPARE 
+    // SLOW CLOCK, WAVEFORM, DISABLE CLK ON RC COMPARE 
     tc->Channel_0.IDR = 0xFF;
     // ΑΠΕΝΕΡΓΟΠΟΙΗΣΗ ΟΛΩΝ ΤΩΝ ∆ΙΑΚΟΠΩΝ 
     tc->Channel_0.IER = 0x10;
     // ΕΝΕΡΓΟΠΟΙΗΣΗ ΜΟΝΟ ΤΟΥ RC COMPARE 
     aic->FFER = (1 << PIOA_ID) | (1 << TC0_ID);
-    // Ο Ι ∆ ΙΑΚΟΠΕΣ 2, 1 7 Ε Ι Ν Α Ι ΤΥΠΟΥ F IQ
+    // ΟΙ ∆ΙΑΚΟΠΕΣ 2, 1 7 ΕΙΝΑΙ ΤΥΠΟΥ FIQ
     aic->IECR = (1 << PIOA_ID) | (1 << TC0_ID);
     // ΕΝΕΡΓΟΠΟΙΗΣΗ ∆ΙΑΚΟΠΩΝ : PIOA &TC0 
     pioa->PUER = 0x01;
@@ -120,7 +120,7 @@ void FIQ_handler(void)
         data_out = tc->Channel_0.SR;
         // ΕΚΚΑΘΑΡΙΣΗ ΤΗΣ ΠΗΓΗΣ ΤΗΣ ∆ΙΑΚΟΠΗΣ 
         aic->ICCR = (1 << TC0_ID);
-        // ΕΚΚΑΘΑΡΙΣΗ ∆ΙΑΚΟΠΗΣ ΚΑ Ι ΑΠΟ A I C 
+        // ΕΚΚΑΘΑΡΙΣΗ ∆ΙΑΚΟΠΗΣ ΚΑΙ ΑΠΟ AIC 
         data_out = pioa->ODSR;
         // ΑΝΑΓΝΩΣΗ ΤΙΜΩΝ ΕΞΟ∆ΟΥ 
         if (led_state == LED_FLASHING){ // μόνο όταν είναι κατάλληλο state
