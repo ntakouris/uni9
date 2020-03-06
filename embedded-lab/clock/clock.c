@@ -104,12 +104,14 @@ int main(int argc, const char *argv[])
 
             int first_digit = ticks % 10;
             int second_digit = (ticks / 10) % 10;
+            
+            if (second_digit != 0) {
+                int t = 10 / second_digit;
 
-            int t = 10 / second_digit;
-
-            if (first_digit % t == 0) {
-                pioa->SODR = data_out | led2;
-                pioa->CODR = data_out & led2;
+                if (first_digit % t == 0) {
+                    pioa->SODR = data_out | led2;
+                    pioa->CODR = data_out & led2;
+                }
             }
         }
 
