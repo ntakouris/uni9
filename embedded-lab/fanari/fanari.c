@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <header.h>
+#include <time.h>
+
 #define PIOA_ID 2
 #define TC0_ID 17
 #define BUT_IDLE 0
@@ -16,22 +18,37 @@
 #define LED_IDLE 0
 #define LED_FLASHING 1
 
+#define STATE_RED 0
+#define STATE_ORANGE 1
+#define STATE_GREEN 2
+
+unsigned int fanari = STATE_GREEN;
+
 void FIQ_handler(void);
 PIO *pioa = NULL;
 AIC *aic = NULL;
 TC *tc = NULL;
+
 unsigned int button_state = BUT_IDLE;
-unsigned int led_state = LED_IDLE;
+
+unsigned int ticks = 0;
+
+unsigned int led_green = 0x0;
+unsigned int led_orange = 0x1;
+unsigned int led_red = 0x0;
+
+unsigned int btn = 0x3;
+
 
 int main(int argc, const char *argv[])
 {
     unsigned int gen;
     STARTUP;
     // ΑΡΧΙΚΟΠΟΙΗΣΗ ΣΥΣΤΗΜΑΤΟΣ 
-    tc->Channel_0.RC = 8192;
+    tc->Channel_0.RC = 8192 ; // interrupt every 1s
     // ΠΕΡΙΟ∆ΟΣ 1 ∆ΕΥΤΕΡΟΛΕΠΤΟ 
     tc->Channel_0.CMR = 2084;
-    // SLOW CLOCK, WAVEFORM, DISABLE CLK ON RC COMPARE 
+    // SLOW CLOCK, WAVEFORM, D ISABLE CLK ON RC COMPARE 
     tc->Channel_0.IDR = 0xFF;
     // ΑΠΕΝΕΡΓΟΠΟΙΗΣΗ ΟΛΩΝ ΤΩΝ ∆ΙΑΚΟΠΩΝ 
     tc->Channel_0.IER = 0x10;
@@ -39,35 +56,40 @@ int main(int argc, const char *argv[])
     aic->FFER = (1 << PIOA_ID) | (1 << TC0_ID);
     // ΟΙ ∆ΙΑΚΟΠΕΣ 2, 1 7 ΕΙΝΑΙ ΤΥΠΟΥ FIQ
     aic->IECR = (1 << PIOA_ID) | (1 << TC0_ID);
-    // ΕΝΕΡΓΟΠΟΙΗΣΗ ∆ΙΑΚΟΠΩΝ : PIOA &TC0 
-    pioa->PUER = 0x01;
+    // ΕΝΕΡΓΟΠΟΙΗΣΗ ∆ΙΑΚΟΠΩΝ : P IOA &TC0 
+    pioa->PUER = btn;
     // ΕΝΕΡΓΟΠΟΙΗΣΗ ΣΤΗ ΓΡΑΜΜΗ 0 : PULL−UP 
-    pioa->ODR = 0x01;
+    pioa->ODR = btn;
     // ΓΡΑΜΜΗ 0 : ΛΕΙΤΟΥΡΓΙΑ ΕΙΣΟ∆ΟΥ 
-    pioa->CODR = 0x02;
+    pioa->CODR = led_orange | led_red;
+    pioa->SODR = led_green;
     // ΓΡΑΜΜΗ 1 : ∆ΥΝΑΜΙΚΟ ΕΞΟ∆ΟΥ LOW 
-    pioa->OER = 0x02;
+    pioa->OER = led_green | led_orange | led_red;
     // ΓΡΑΜΜΗ 1 : ΛΕΙΤΟΥΡΓΙΑ ΕΞΟ∆ΟΥ 
     gen = pioa->ISR;
-    // PIOA : ΕΚΚΑΘΑΡΙΣΗ ΑΠΟ ΤΥΧΟΝ ∆ ΙΑΚΟΠΕΣ 
-    pioa->PER = 0x03;
-    // ΓΡΑΜΜΕΣ 0, 1 : ΓΕΝΙΚΟΥ ΣΚΟΠΟΥ
+    // PIOA : ΕΚΚΑΘΑΡΙΣΗ ΑΠΟ ΤΥΧΟΝ ∆ΙΑΚΟΠΕΣ 
+    pioa->PER = led0 | led1 | led2 | btn;
     gen = tc->Channel_0.SR;
-    // TC0 : ΕΚΚΑΘΑΡΙΣΗ ΑΠΟ ΤΥΧΟΝ ∆ ΙΑΚΟΠΕΣ 
+    // TC0 : ΕΚΚΑΘΑΡΙΣΗ ΑΠΟ ΤΥΧΟΝ ∆ΙΑΚΟΠΕΣ 
     aic->ICCR = (1 << PIOA_ID) | (1 << TC0_ID);
-    // AIC : ΕΚΚΑΘΑΡΙΣΗ ΑΠΟ ΤΥΧΟΝ ∆ ΙΑΚΟΠΕΣ 
-    pioa->IER = 0x01;
+    // AIC : ΕΚΚΑΘΑΡΙΣΗ ΑΠΟ ΤΥΧΟΝ ∆ΙΑΚΟΠΕΣ 
+    pioa->IER = btn;
 
     while (getchar() != 'e')
     {
+        
     }
 
     aic->IDCR = (1 << PIOA_ID) | (1 << TC0_ID);
-    // ∆ΙΑΚΟΠΗ ΤΩΝ ΑΙC Interrupts
+    // ∆ΙΑΚΟΠΗ ΤΩΝ AIC interrupts
     tc->Channel_0.CCR = 0x02;
     // ΑΠΕΝΕΡΓΟΠΟΙΗΣΗ ΤΟΥ Timer CLEANUP;
     return 0;
 }
+
+unsigned int walk_request = 0;
+unsigned int red_ticks = 0;
+unsigned int red_scheduled = 1;
 
 void FIQ_handler(void)
 {
@@ -78,33 +100,22 @@ void FIQ_handler(void)
     // ΕΝΤΟΠΙΣΜΟΣ ΠΕΡΙΦΕΡΕΙΑΚΟΥ ΠΟΥ ΠΡΟΚΑΛΕΣΕ ΤΗ ∆ΙΑΚΟΠΗ 
     if (fiq & (1 << PIOA_ID))
     {
-        // ΕΛΕΓΧΟΣ Γ Ι Α P IOA 
+        // ΕΛΕΓΧΟΣ ΓΙΑ PIOA 
         data_in = pioa->ISR;
         // ΕΚΚΑΘΑΡΙΣΗ ΤΗΣ ΠΗΓΗΣ ΤΗΣ ∆ΙΑΚΟΠΗΣ 
         aic->ICCR = (1 << PIOA_ID);
-        // ΕΚΚΑΘΑΡΙΣΗ ΤΗΣ ∆ΙΑΚΟΠΗΣ ΑΠΟ A I C 
+        // ΕΚΚΑΘΑΡΙΣΗ ΤΗΣ ∆ΙΑΚΟΠΗΣ ΑΠΟ AIC 
         data_in = pioa->PDSR;
         // ΑΝΑΓΝΩΣΗ ΤΙΜΩΝ ΕΙΣΟ∆ΟΥ 
-        if (!(data_in & 0x01)) // στο πάτημα
+        if (!(data_in & btn)) // pull up resistor
         {
-            // ∆ ΙΑΚΟΠΤΗΣ ΠΑΤΗΜΕΝΟΣ;
+            // ∆ΙΑΚΟΠΤΗΣ ΠΑΤΗΜΕΝΟΣ
             if (button_state == BUT_IDLE)
             {
                 button_state = BUT_PRESSED;
-                if (led_state == LED_IDLE)
-                {
-                    // ΑΝ ∆ΕΝ ΑΝΑΒΟΣΒΗΝΕΙ 
-                    tc->Channel_0.CCR = 0x05;
-                    // ΕΝΑΡΞΗ ΜΕΤΡΗΤΗ 
-                    led_state = LED_FLASHING;
-                }
-
-                else
-                {
-                    tc->Channel_0.CCR = 0x02;
-                    // ∆ΙΑΚΟΠΗ ΜΕΤΡΗΤΗ
-                    led_state = LED_IDLE;
-                }
+                
+                // diavasi
+                walk_request = 1;
             }
         }
         else
@@ -115,6 +126,7 @@ void FIQ_handler(void)
         }
     }
 
+    // timer interrupt
     if (fiq & (1 << TC0_ID))
     {
         data_out = tc->Channel_0.SR;
@@ -123,10 +135,44 @@ void FIQ_handler(void)
         // ΕΚΚΑΘΑΡΙΣΗ ∆ΙΑΚΟΠΗΣ ΚΑΙ ΑΠΟ AIC 
         data_out = pioa->ODSR;
         // ΑΝΑΓΝΩΣΗ ΤΙΜΩΝ ΕΞΟ∆ΟΥ 
-        if (led_state == LED_FLASHING){ // μόνο όταν είναι κατάλληλο state
-            pioa->SODR = data_out | 0x02; // διόρθωση για να αναβοσβήνει
-            pioa->CODR = data_out & 0x02;
+        ticks++;
+
+        if (fanari == STATE_GREEN && walk_request == 1) {
+            fanari = STATE_ORANGE;
+            
+            pioa->CODR = led_green;
+        } else if (fanari == STATE_ORANGE && walk_request == 1) {
+            // blink orange 
+            walk_request = 0;
+
+            pioa->CODR = led_green;
+            pioa->SODR = led_orange;
+        } else if (fanari == STATE_ORANGE && walk_request == 0) {
+            // red
+            fanari == STATE_RED;
+        }else if (fanari == STATE_RED) {
+            if (red_scheduled == 1) {
+                pioa->CODR = led_orange;
+                pioa->SODR = led_red;
+                red_scheduled = 0;
+            }else{
+                red_ticks++;
+
+                if (red_ticks == 10) {  // reset to green
+                    fanari = STATE_GREEN;
+                    red_ticks = 0;
+                    ticks = 0;
+
+                    walk_request = 0;
+                    red_scheduled = 0;
+
+                    pioa->CODR = led_red;
+                    pioa->SODR = led_green;
+                }
+            }
         }
+        
+        // re-count from initial config
         tc->Channel_0.CCR = 0x05;
     }
 }
