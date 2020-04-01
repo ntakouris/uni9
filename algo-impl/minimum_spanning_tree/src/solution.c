@@ -8,6 +8,7 @@
 #include "LEDA/graph/graph_gen.h"
 #include "LEDA/system/timer.h"
 #include "LEDA/core/dynamic_trees.h"
+#include "LEDA/graph/min_span.h"
 
 using namespace leda;
 
@@ -16,6 +17,7 @@ typedef struct ListNode {
     int size;
     ListNode* next;
     ListNode* lists_last;
+    int i;
 } ListNode;
 
 list<edge> certify(const graph &G, const edge_array<int> &cost)
@@ -107,23 +109,25 @@ bool checker(const graph &G, const list<edge> &T, const edge_array<int> &cost)
     node_array<vertex> vertices(G);
     node n;
     // generate vertices
+    // std::cout << "Making Vertices" << std::endl;
+    int cnt = 0;
     forall_nodes(n, G) {
         vertices[n] = D.make();
     }
 
     // construct dynamic tree
+    // std::cout << "Constructing Dynamic Tree" << std::endl;
     edge e;
+    int i = 0;
     forall(e, T) {
         node source = G.source(e);
         node target = G.target(e);
-
         vertex vs = vertices[source];
         vertex vt = vertices[target];
-
-        D.link(vs, vt, cost[e]);
+        int c = cost[e];
+        D.link(vs, vt, c);
     }
 
-    vertex tmp;
     // for all edges (e) in G and not in T
     forall_edges(e, G)
     {
@@ -141,9 +145,12 @@ bool checker(const graph &G, const list<edge> &T, const edge_array<int> &cost)
 
         D.evert(corresponding_src);
 
+        // G.print_edge(e);
+        // std::cout << std::endl;
+
         // traverse path from source to target
-        tmp = corresponding_trg;
-        while (tmp != corresponding_src){ // crash when no parent found -> graph not complete
+        vertex tmp = corresponding_trg;
+        while (tmp != corresponding_src && tmp != nil){
             vertex parent = D.parent(tmp);
             int cost = std::round(D.cost(tmp)); // D returns double but we only assign ints
 
@@ -160,8 +167,6 @@ bool checker(const graph &G, const list<edge> &T, const edge_array<int> &cost)
 
 void run_tests(const graph& g)
 {
-    std::cout << std::endl << std::endl;
-
     random_source S;
     edge_array<int> cost(g);
     edge e;
@@ -172,7 +177,7 @@ void run_tests(const graph& g)
     }
 
     int times = 1;
-    int elapsed_time = 0;
+    float elapsed_time = 0;
     timer dfs;
     list<edge> tree;
     for (int i = 0; i < times; i++) {
@@ -183,18 +188,28 @@ void run_tests(const graph& g)
     }
     std::cout << "Our benchmark time: " << (elapsed_time / times) << std::endl;
 
-    // elapsed_time = 0;
-    // for (int i = 0; i < times; i++) {
-    //     dfs.start();
-    //     // list<edge> tree = certify(g, cost);
-    //     //TODO: Replace with LEDA's MST
-    //     dfs.stop();
-    //     elapsed_time += dfs.elapsed_time();
-    // }
-    // std::cout << "LEDA's time: " << (elapsed_time / times) << std::endl;
+    elapsed_time = 0;
+    list<edge> ledas;
+    for (int i = 0; i < times; i++) {
+        dfs.start();
+        ledas = MIN_SPANNING_TREE(g, cost);
+        
+        dfs.stop();
+        elapsed_time += dfs.elapsed_time();
+    }
+    std::cout << "LEDA's time: " << (elapsed_time / times) << std::endl;
 
-    bool verification = checker(g, tree, cost);
-    std::cout << "Verification: " << (verification == 1 ? "true" : "false") << std::endl;
+    // forall(e, tree){
+    //     g.print_edge(e);
+    // }
+    
+    bool verification = checker(g, ledas, cost);
+    std::cout << "LEDA: Verification: " << (verification == 1 ? "true" : "false") << std::endl;
+
+    verification = checker(g, tree, cost);
+    std::cout << "OURS: Verification: " << (verification == 1 ? "true" : "false") << std::endl;
+
+    std::cout << "=============" << std::endl << std::endl;
 }
 
 int experiments(){
@@ -208,58 +223,66 @@ int experiments(){
     return 0;
 }
 
-// int tests()
-// {
-//     std::cout << "Connected Graphs" << std::endl << std::endl;
+int tests()
+{
 
-//     n_sizes = [4000, 8000, 16000];
-//     for (int i = 0; i < 3; i++) {
-//         n = n_sizes[i];
-//         m = 2 * n * log(n);
+    // graph ge; // graph >= ~ 400 makes segmentation
+    // grid_graph(ge, 500);
+    // Make_Connected(ge);
+    // ge.make_undirected();
+    // run_tests(ge);
 
-//         // generate connected graph with n nodes and m edges
-//         graph g;
-//         random_simple_loopfree_graph(g, n, m);
-//         Make_Connected(g);
-//         g.make_undirected();
+    std::cout << "Connected Graphs" << std::endl << std::endl;
 
-//         std::cout << "Graph " << i << std::endl;
-//         run_tests(g);
-//     }
-//     std::cout << std::endl << std::endl;
+    int n_sizes[] = {4000, 8000, 16000};
+    for (int i = 0; i < 3; i++) {
+        int n = n_sizes[i];
+        int m = 2 * n * log(n);
 
-//     std::cout << "Grid Graphs" << std::endl << std::end;
+        // generate connected graph with n nodes and m edges
+        graph g;
+        random_simple_loopfree_graph(g, n, m);
+        Make_Connected(g);
+        g.make_undirected();
 
-//     g_sizes = [200, 300, 400];
-//     for (int i = 0; i < 3; i++) {
-//         n = g_sizes[i];
+        std::cout << "Random Graph (" << n << ", " << m << ") " << i << std::endl;
+        run_tests(g);
+    }
+    std::cout << std::endl << std::endl;
 
-//         graph g;
-//         grid_graph(g, n);
-//         // Make_Connected(g); // No need
-//         g.make_undirected();
-//         std::cout << "Graph " << i << std::endl;
-//         run_tests(g);
-//     }
-//     std::cout << std::endl << std::endl;
+    std::cout << "Grid Graphs" << std::endl << std::endl;
 
-//     std::cout << "Custom Graphs" << std::endl << std::end;;
+    int g_sizes[] = {200, 300, 400};
+    for (int i = 0; i < 2; i++) {
+        int n = g_sizes[i];
 
-//     std::cout << "Complete Graph" << std::endl;
-//     graph g_c;
-//     g_c.make_undirected();
-//     complete_graph(g_c, 2000);
-//     run_tests(g_c);
+        graph g;
+        grid_graph(g, n);
+        Make_Connected(g); // No need
+        g.make_undirected();
 
-//     std::cout << "Complete Graph" << std::endl;
-//     graph g;
-//     complete_graph(g, 2000);
-//     run_tests(g);
+        std::cout << "Grid Graph (" << n << ", " << n << ")" << std::endl;
+        run_tests(g);
+    }
+    std::cout << std::endl << std::endl;
 
-//     return 0;
-// }
+    std::cout << "Custom Graphs" << std::endl << std::endl;
+
+    std::cout << "Complete Graph (2000, with make_undirected)" << std::endl;
+    graph g_c;
+    g_c.make_undirected();
+    complete_graph(g_c, 2000);
+    run_tests(g_c);
+
+    std::cout << "Complete Graph (2000, without make_undirected)" << std::endl;
+    graph g;
+    complete_graph(g, 2000);
+    run_tests(g);
+
+    return 0;
+}
 
 int main(){
-    // return tests(); // <-- This runs 5-node graph for testing 
-    return experiments(); // <-- This runs benchmarks
+    return tests(); // <-- This runs 5-node graph for testing 
+    // return experiments(); // <-- This runs benchmarks
 }
