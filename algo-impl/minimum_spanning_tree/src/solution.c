@@ -203,11 +203,26 @@ void run_tests(const graph& g)
     //     g.print_edge(e);
     // }
     
-    bool verification = checker(g, ledas, cost);
-    std::cout << "LEDA: Verification: " << (verification == 1 ? "true" : "false") << std::endl;
+    elapsed_time = 0;
+    bool our_verif = false;
+    for (int i = 0; i < times; i++){
+        dfs.start();
+        our_verif = checker(g, ledas, cost);
+        dfs.stop();
 
-    verification = checker(g, tree, cost);
-    std::cout << "OURS: Verification: " << (verification == 1 ? "true" : "false") << std::endl;
+        elapsed_time += dfs.elapsed_time();
+    }
+
+    bool leda_verif = false;
+    for (int i = 0; i < times; i++) {
+        dfs.start();
+        leda_verif = checker(g, tree, cost);
+        dfs.stop();
+
+        elapsed_time += dfs.elapsed_time();
+    }
+
+    std::cout << "Verification: " << ((leda_verif == our_verif) == 1 ? "true" : "false") << " in " << (elapsed_time / (2 * times)) << " s" << std::endl;
 
     std::cout << "=============" << std::endl << std::endl;
 }
@@ -253,12 +268,12 @@ int tests()
     std::cout << "Grid Graphs" << std::endl << std::endl;
 
     int g_sizes[] = {200, 300, 400};
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 3; i++) {
         int n = g_sizes[i];
 
         graph g;
         grid_graph(g, n);
-        Make_Connected(g); // No need
+        // Make_Connected(g); // No need
         g.make_undirected();
 
         std::cout << "Grid Graph (" << n << ", " << n << ")" << std::endl;

@@ -82,8 +82,8 @@ int main(int argc, const char *argv[])
         }
 
         // clamp and direction flip
-        if (pwm < 0){ pwm = 0; direction = DIRECTION_UP;}
-        if (pwm > 100) {pwm = 100; direction = DIRECTION_DOWN;}	
+        if (pwm == 0){ pwm = 0; direction = DIRECTION_UP;}
+        if (pwm == 100) {pwm = 100; direction = DIRECTION_DOWN;}	
         
         printf("pwm = %u\n", pwm);
 
