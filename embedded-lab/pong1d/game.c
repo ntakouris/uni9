@@ -123,7 +123,6 @@ void FIQ_handler(void)
         data_in = pioa->PDSR;
         // ΑΝΑΓΝΩΣΗ ΤΙΜΩΝ ΕΙΣΟ∆ΟΥ 
 
-
         // --- PLAYER 1 CONTROLS
 
         /* p1_a */

@@ -27,3 +27,5 @@ List of almost all the projects I made during my studies at the Computer Enginee
 | json-bison-flex | JSON Parser with flex and bison |
 | julia-dsp | rectangular reconstruction with julia (experiment) |
 | openmp | yes |
+| embedded-lab | AT91 board embedded c exercises |
+| algo-impl | boost and leda c++ graph algorithms, checkers and benchmarks |
