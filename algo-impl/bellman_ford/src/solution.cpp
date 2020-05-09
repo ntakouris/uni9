@@ -1,4 +1,8 @@
-#include <math.h>
+#define V_PLUS 0
+#define V_MINUS 1
+#define V_F 2
+
+#include <cmath>
 #include <utility>
 #include <random>
 
@@ -25,22 +29,21 @@
 #include <ctime>
 #include <cstdlib>
 
-srand(time(0));
-
 typedef leda::node node;
 typedef leda::edge edge;
-struct NodeInfo
+
+typedef struct NodeInfo
 {
-    unsigned int distance;
+    int distance; // was unsigned int
     bool visited;
-    // TODO
-    // predecessor
-    // label
-};
-struct EdgeInfo
+    int parent;
+    int label;
+} NodeInfo;
+
+typedef struct EdgeInfo
 {
     int weight;
-};
+} EdgeInfo;
 
 typedef leda::graph LGraph;
 using leda::edge_array;
@@ -54,20 +57,14 @@ typedef boost::graph_traits<BGraph>::out_edge_iterator outArcIt;
 typedef boost::graph_traits<BGraph>::adjacency_iterator aIt;
 
 typedef boost::property_map<BGraph, int EdgeInfo::*>::type WeightPrMap;
-typedef boost::property_map<BGraph, unsigned int NodeInfo::*>::type DistanceMap;
+typedef boost::property_map<BGraph, int NodeInfo::*>::type DistanceMap; // was unsigned int
 typedef boost::property_map<BGraph, bool NodeInfo::*>::type VisitedMap;
+typedef boost::property_map<BGraph, int NodeInfo::*>::type LabelMap;
+typedef boost::property_map<BGraph, int NodeInfo::*>::type ParentMap;
 
 void copy_graph(const LGraph &LG, BGraph &BG, edge_array<int> &l_weight, WeightPrMap &b_weight,
-                node_array<NodeInfo> &nodeInfo, DistanceMap &b_dist, VisitedMap &b_visit);
-
-void bf_impl(){
-    
-}
-
-void benchmark()
-{
-
-}
+                node_array<NodeInfo> &nodeInfo, DistanceMap &b_dist, VisitedMap &b_visit,
+                LabelMap &b_label, ParentMap &b_parent);
 
 void tests()
 {
@@ -78,19 +75,17 @@ void tests()
     int n[] = {1000, 4000, 8000};
     for (int i = 0; i < 3; i++)
     {
-        std::cout << "Weakly Connected (" << n << "," << m << ")" << std::endl;
+        int m = 20 * n[i] * ((int)log10(n[i]));
+
+        std::cout << "Weakly Connected (" << n[i] << "," << m << ")" << std::endl;
         std::cout << "Constructing Graph" << std::endl;
-        int m = 20 * n[i] * log(n[i]);
         LGraph LG;
         edge_array<int> l_weight(LG);
 
-        BGraph BG;
-        WeightPrMap b_weight = get(&EdgeInfo::weight, BG);
-        DistanceMap b_dist = get(&NodeInfo::distance, BG);
-        VisitedMap b_visit = get(&NodeInfo::visited, BG);
-
         random_graph(LG, n[i], m);
+
         Make_Connected(LG);
+
         l_weight.init(LG);
         edge e;
         forall_edges(e, LG)
@@ -102,210 +97,59 @@ void tests()
         node v;
         int i = 0;
         forall_nodes(v, LG)
-        {
+        {   
             nodeInfo[v].visited = false;
             nodeInfo[v].distance = std::numeric_limits<int>::max();
         }
 
-        nodeInfo[0] = 0; // start node
+        node s = LG.choose_node();
+        nodeInfo[s].distance = 0; // start node  - needed for boost
+
+        BGraph BG;
+        WeightPrMap b_weight = get(&EdgeInfo::weight, BG);
+        DistanceMap b_dist = get(&NodeInfo::distance, BG);
+        VisitedMap b_visit = get(&NodeInfo::visited, BG);
+        LabelMap b_label = get(&NodeInfo::label, BG);
+        ParentMap b_parent = get(&NodeInfo::parent, BG);
+        vertex b_s;
 
         std::cout << "Copying to BGL" << std::endl;
-        copy_graph(LG, BG, l_weight, b_weight, nodeInfo, b_dist, b_visit);
+        copy_graph(LG, BG, l_weight, b_weight, nodeInfo, b_dist, b_visit, b_label, b_parent);
 
         std::cout << "Running Benchmarks" << std::endl;
 
         // run leda benchmark
+        std::cout << "LEDA" << std::endl;
+        node_array<edge> pred(LG);
+	    node_array<int> distance(LG);
+        bool r = BELLMAN_FORD_B_T(LG,s,l_weight,distance,pred);
+        std::cout << "r = " << r << std::endl;
         // run boost benchmark
-        // run our benchmark
-    }
 
-    /* grid graphs */
-    std::cout << "Grid Graphs" << std::endl << std::endl;
-    int grid_n = {100, 200, 300};
-    for (int l = 0; l < 3; l++)
-    {
-        int k = grid_n[l]; // grid size
-        std::cout << "Grid (" << k << "," << k << ")" << std::endl;
-        std::cout << "Constructing Graph" << std::endl;
-
-        /* START BOILERPLATE */
-
-        /* END BOILERPLATE */
-
-        int num_nodes = k * k;
-        
-        leda::node node_tracker[num_nodes];
-
-        // populate vertices
-        for (int x = 0; x < k; x++)
-        {
-            for (int y = 0; y < k; y++)
-            {
-                int cur = x * k + y;
-                node_tracker[cur] = LG.new_node();
-            }
+        if (r == 1){
+        std::cout << "BOOST" << std::endl;
+        r = bellman_ford_shortest_paths(BG, n, weight_map(b_weight).
+                                distance_map(b_dist).
+                                predecessor_map(b_parent));
+        std::cout << "r = " << r << std::endl;
+        } else {
+            std::cout << "not running for boost because leda found negative cycle" << std::endl;
         }
-
-        // populate edges
-        for (int x = 0; x < k; x++)
-        {
-            for (int y = 0; y < k; y++)
-            {
-                // node index calculation
-                int cur = x * k + y;
-
-                if (y < k / 2)
-                { // top part | bottom and right
-                    if (x != k - 1)
-                    { // not rightmost limit
-                        // connect to right (x, y) -> (x + 1, y)
-                        int trg_right = (x + 1) * k + y;
-                        int w_right = S() % 10000;
-
-                        edge e = LG.new_edge(node_tracker[cur], node_tracker[trg_right]);
-                        l_weight[e] = w_right;
-                    }
-
-                    // connect to bottom (x, y) -> (x, y + 1)
-                    int trg_bot = x * k + y + 1;
-                    int w_bot = S() % 10000;
-                    edge e = LG.new_edge(node_tracker[cur], node_tracker[trg_bot]);
-                    l_weight[e] = w_bot;
-                }
-                else if (y == k / 2)
-                { // middle row | only right
-                    if (x != k - 1)
-                    { // not rightmost limit
-                        // connect to right (x, y) -> (x + 1, y)
-                        int trg = (x + 1) * k + y;
-                        int w = S() % 10000;
-
-                        edge e = LG.new_edge(node_tracker[cur], node_tracker[trg]);
-                        l_weight[e] = w;
-                    }
-                }
-                else
-                { // bottom part
-                    if (x < k / 2)
-                    { // bottom left
-                        if (y == (k / 2) + 1 && x == (k / 2) - 1)
-                        { // special target
-                            int w_spec = -100000;
-                            int trg_spec = x * k + (y - 1);
-                            
-                            edge e = LG.new_edge(node_tracker[cur], node_tracker[trg_spec]);
-                            l_weight[e] = w_spec;
-                        }
-
-                        // random direction
-                        // random left
-                        if (x != 0)
-                        { // not leftmost
-                            int randomval = rand() % 2;
-                            if (randomval == 1){
-                                int w_l = (S() % (10000 + 100)) - 100 int trg_l = (x - 1) * k + y;
-                                int trg_l = (x - 1) * k + y;
-
-                                edge e = LG.new_edge(node_tracker[cur], node_tracker[trg_l]);
-                                l_weight[e] = w_l;
-                            }
-                        }
-
-                        // random bottom
-                        if (y != k - 1)
-                        { // not bottom most
-                            int randomval = rand() % 2;
-                            if (randomval == 1){
-                                int w_b = (S() % (10000 + 100)) - 100;
-                                int trg_b = x * k + y + 1;
-
-                                edge e = LG.new_edge(node_tracker[cur], node_tracker[trg_b]);
-                                l_weight[e] = w_b;
-                            }
-                        }
-
-                        // random up
-                        int randomval = rand() % 2;
-                        if (randomval == 1){
-                            int w_u = (S() % (10000 + 100)) - 100 int trg_u = x * k + y - 1;
-                            int trg_u = x * k + y - 1;
-
-                            edge e = LG.new_edge(node_tracker[cur], node_tracker[trg_u]);
-                            l_weight[e] = w_u;
-                        }
-                        // random right
-                        int randomval = rand() % 2;
-                        if (randomval == 1){
-                            int w_r = (S() % (10000 + 100)) - 100 int trg_r = (x + 1) * k + y;
-                            int trg_r = (x + 1) * k + y;
-
-                            edge e = LG.new_edge(node_tracker[cur], node_tracker[trg_r]);
-                            l_weight[e] = w_r;
-                        }
-                    }
-                    else if (x == k / 2)
-                    { // center bottom column
-                        int trg_bot = x * k + y + 1;
-                        int w_bot = S() % 10000;
-
-                        edge e = LG.new_edge(node_tracker[cur], node_tracker[trg_bot]);
-                        l_weight[e] = w_bot;
-
-                        if (y == (k / 2) + 1)
-                        { // special target
-                            int w_spec = -100000;
-                            int trg_spec = (x - 1) * k + y;
-
-                            edge e = LG.new_edge(node_tracker[cur], node_tracker[trg_spec]);
-                            l_weight[e] = w_spec;
-                        }
-                    }
-                    else
-                    { // bottom right
-                        if (x == k - 1)
-                        {
-                            continue; // last node
-                        }
-
-                        if (y != k - 1)
-                        { // if not bottom most
-                            int trg_bot = x * k + y + 1;
-                            int w_bot = S() % 10000;
-                            
-                            edge e = LG.new_edge(node_tracker[cur], node_tracker[trg_bot]);
-                            l_weight[e] = w_bot;
-                        }
-
-                        // connect to right (x, y) -> (x + 1, y)
-                        int trg_r = (x + 1) * k + y;
-                        int w_r = S() % 10000;
-
-                        edge e = LG.new_edge(node_tracker[cur], node_tracker[trg_r]);
-                        l_weight[e] = w_r;
-                    }
-                }
-            }
-        } // end populate edges
-
-        int source_idx = 0;
-        nodeInfo[source_idx] = 0; // start node
-
-        std::cout << "Copying to BGL" << std::endl;
-        copy_graph(LG, BG, l_weight, b_weight, nodeInfo, b_dist, b_visit);
-
-        std::cout << "Running Benchmarks" << std::endl;
-        benchmark();
+        // run our benchmark
     }
 }
 
 int main()
 {
-    return tests(); // <-- This runs 5-node graph for testing
+    tests(); // <-- This runs 5-node graph for testing
     // return experiments(); // <-- This runs benchmarks
+
+    return 0;
 }
 
 void copy_graph(const LGraph &LG, BGraph &BG, edge_array<int> &l_weight, WeightPrMap &b_weight,
-                node_array<NodeInfo> &nodeInfo, DistanceMap &b_dist, VisitedMap &b_visit)
+                node_array<NodeInfo> &nodeInfo, DistanceMap &b_dist, VisitedMap &b_visit,
+                LabelMap &b_label, ParentMap &b_parent)
 {
     leda::node_array<vertex> copy_in_BG(LG);
     arc a;
@@ -317,6 +161,8 @@ void copy_graph(const LGraph &LG, BGraph &BG, edge_array<int> &l_weight, WeightP
         copy_in_BG[v] = add_vertex(BG);
         b_dist[copy_in_BG[v]] = nodeInfo[v].distance;
         b_visit[copy_in_BG[v]] = nodeInfo[v].visited;
+        b_parent[copy_in_BG[v]] = nodeInfo[v].parent;
+        //b_label[copy_in_BG[v]] = nodeInfo[v].label;
     }
     bool isAdded;
     forall_edges(e, LG)
