@@ -78,6 +78,11 @@
         "vector": "c",
         "bit": "c",
         "memory_resource": "c",
-        "cinttypes": "c"
+        "cinttypes": "c",
+        "__tree": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "variant": "cpp",
+        "cfenv": "cpp"
     }
 }
