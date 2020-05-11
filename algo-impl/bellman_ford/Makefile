@@ -9,15 +9,16 @@ LIBFLAGS = -lleda -lm
 Leda = '/usr/local/LEDA/incl'
 LedaLibs = '/usr/local/LEDA'
 
-BOOSTDIR = '/usr/include'
+BOOSTINCL = '/usr/include/boost'
+BOOSTLIB = '/usr/local/lib'
 
 all: $(name)
 $(name): $(obj)
-	$(CC) $(CFLAGS) -o $@ $^ -I$(Leda) -L$(LedaLibs) $(LIBFLAGS) -I$(BOOSTDIR)
-
+	$(CC) $(CFLAGS) -o $@ $^ -I$(Leda) -L$(LedaLibs) $(LIBFLAGS) -I$(BOOSTINCL) -L$(BOOSTLIB)
+	
 compile: $(name)
 $(name): $(obj)
-	$(CC) $(CFLAGS) -g -o $@ $^ -I$(Leda) -L$(LedaLibs) $(LIBFLAGS) -I$(BOOSTDIR)
+	$(CC) $(CFLAGS) -o $@ $^ -I$(Leda) -L$(LedaLibs) $(LIBFLAGS) -I$(BOOSTINCL) -L$(BOOSTLIB)
 
 run:
 	./$(name)
