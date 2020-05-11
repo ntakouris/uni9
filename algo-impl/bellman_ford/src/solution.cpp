@@ -1,9 +1,14 @@
-#define PRINT_LABELS 0
+#define PRINT_LABELS 1
 
-#define SKIP_RANDOM_GRAPHS 1
+#define SKIP_RANDOM_GRAPHS 0
 #define SKIP_GRID_GRAPHS 0
 
-#define RUN_TIMES 5
+#if PRINT_LABELS == 1
+    #define RUN_TIMES 1
+#else
+    #define RUN_TIMES 5
+#endif
+
 
 #include <cmath>
 #include <utility>
@@ -237,14 +242,13 @@ bool our_bellman(BGraph &BG, int n, WeightPrMap &c, DistanceMap &distmap, PredMa
         vertex target = boost::target(*ei, BG);
         vertex source = boost::source(*ei, BG);
 
-        if (index[source] != index[predmap[target]])
+        if (predmap[target] != NULL && index[source] != index[predmap[target]])
         {
             // hide *ei
             hidden.push_back(std::make_pair(source, target));
             remove_edge(source, target, BG);
         }
     }
-
     DFSVisitor vis(rmap);
     boost::depth_first_search(BG, boost::root_vertex(s).visitor(vis));
     //restore_all_edges();
@@ -270,15 +274,14 @@ bool our_bellman(BGraph &BG, int n, WeightPrMap &c, DistanceMap &distmap, PredMa
     ReachedFromNodeInUMap reachable = reached_from_node;
     LabelMap label = labelmap;
     PredMap pred = predmap;
-    // condition (1)
 
+    // condition (1)
     // forall_nodes v of G
     for (vp = vertices(BG); vp.first != vp.second; ++vp.first)
     {
-        if (v != s)
+        if (v != s && s != NULL && v != NULL)
         {
-            assert((pred[v] == NULL) == (reachable[v] == false));
-            if (reachable[v] == false)
+            if (v != NULL && reachable[v] == false)
             {
                 labelmap[v] = PLUS;
             }
@@ -334,6 +337,8 @@ bool our_bellman(BGraph &BG, int n, WeightPrMap &c, DistanceMap &distmap, PredMa
             }
         }
     }
+
+    bool neg_cycle_found = false;
     // condition (2)
     for (vp = vertices(BG); vp.first != vp.second; ++vp.first)
     {
@@ -356,38 +361,13 @@ bool our_bellman(BGraph &BG, int n, WeightPrMap &c, DistanceMap &distmap, PredMa
                     {
                         cycle_length += c[*ei];
                         label[w] = NEG_CYCLE;
+                        neg_cycle_found = true;
                         w = pred[w];
 
                         break;
                     }
                 }
             } while (w != v);
-            assert(cycle_length < 0);
-        }
-    }
-
-    //conditions (3), (4), and (5)
-    if (label[s] == FINITE)
-    {
-        assert(distmap[s] == 0);
-    }
-
-    for (boost::tie(ei, ei_end) = edges(BG); ei != ei_end; ei++)
-    {
-        vertex v = boost::target(*ei, BG);
-        vertex w = boost::source(*ei, BG);
-
-        if (label[w] == FINITE)
-        {
-            assert(label[v] == FINITE || label[v] == PLUS);
-            if (label[v] == FINITE)
-            {
-                assert(distmap[v] + c[*ei] >= distmap[w]);
-                if (w == pred[w])
-                { // if is self
-                    assert(distmap[v] + c[*ei] == distmap[w]);
-                }
-            }
         }
     }
 
@@ -404,7 +384,7 @@ bool our_bellman(BGraph &BG, int n, WeightPrMap &c, DistanceMap &distmap, PredMa
         }
     }
 
-    return false;
+    return neg_cycle_found || false;
 }
 
 void tests()
@@ -475,36 +455,38 @@ void tests()
             }
             std::cout << "r = " << r << ", time average = " << elapsed_time / RUN_TIMES << std::endl;
 
-            std::cout << "LEDA" << std::endl;
-            node_array<edge> pred(LG);
-            node_array<int> distance(LG);
-
-            elapsed_time = 0;
-            for(int t=0;t<RUN_TIMES;t++){
-                stopwatch.start();
-                r = BELLMAN_FORD_B_T(LG, s, l_weight, distance, pred);
-                stopwatch.stop();
-                elapsed_time += stopwatch.elapsed_time();
-            }
-            std::cout << "r = " << r << ", time average = " << elapsed_time / RUN_TIMES << std::endl;
-            // run boost benchmark
-
-            if (r == 1)
-            {
-                std::cout << "BOOST" << std::endl;
+            if (PRINT_LABELS != 1){
+                std::cout << "LEDA" << std::endl;
+                node_array<edge> pred(LG);
+                node_array<int> distance(LG);
 
                 elapsed_time = 0;
-                for (int t=0;t<RUN_TIMES;t++){
+                for(int t=0;t<RUN_TIMES;t++){
                     stopwatch.start();
-                    r = bellman_ford_shortest_paths(BG, n[i], weight_map(b_weight).distance_map(b_dist).predecessor_map(b_parent));
+                    r = BELLMAN_FORD_B_T(LG, s, l_weight, distance, pred);
                     stopwatch.stop();
                     elapsed_time += stopwatch.elapsed_time();
                 }
                 std::cout << "r = " << r << ", time average = " << elapsed_time / RUN_TIMES << std::endl;
-            }
-            else
-            {
-                std::cout << "not running for boost because leda found negative cycle" << std::endl;
+                // run boost benchmark
+
+                if (r == 1)
+                {
+                    std::cout << "BOOST" << std::endl;
+
+                    elapsed_time = 0;
+                    for (int t=0;t<RUN_TIMES;t++){
+                        stopwatch.start();
+                        r = bellman_ford_shortest_paths(BG, n[i], weight_map(b_weight).distance_map(b_dist).predecessor_map(b_parent));
+                        stopwatch.stop();
+                        elapsed_time += stopwatch.elapsed_time();
+                    }
+                    std::cout << "r = " << r << ", time average = " << elapsed_time / RUN_TIMES << std::endl;
+                }
+                else
+                {
+                    std::cout << "not running for boost because leda found negative cycle" << std::endl;
+                }
             }
         }
     }
@@ -702,7 +684,7 @@ void tests()
             }
 
             node s = node_tracker[0];
-            nodeInfo[s].distance = 0; // start node  - needed for boost
+            nodeInfo[s].distance = 0; // start node  - needed for boost version
 
             BGraph BG;
             WeightPrMap b_weight = get(&EdgeInfo::weight, BG);
@@ -722,42 +704,44 @@ void tests()
             bool r;
             for (int t=0;t<RUN_TIMES;t++){
                 stopwatch.start();
-                r = our_bellman(BG, n[i], b_weight, b_dist, b_parent);
+                r = our_bellman(BG, num_nodes, b_weight, b_dist, b_parent);
                 stopwatch.stop();
                 elapsed_time += stopwatch.elapsed_time();
             }
             std::cout << "r = " << r << ", time average = " << elapsed_time / RUN_TIMES << std::endl;
 
-            std::cout << "LEDA" << std::endl;
-            node_array<edge> pred(LG);
-            node_array<int> distance(LG);
-
-            elapsed_time = 0;
-            for(int t=0;t<RUN_TIMES;t++){
-                stopwatch.start();
-                r = BELLMAN_FORD_B_T(LG, s, l_weight, distance, pred);
-                stopwatch.stop();
-                elapsed_time += stopwatch.elapsed_time();
-            }
-            std::cout << "r = " << r << ", time average = " << elapsed_time / RUN_TIMES << std::endl;
-            // run boost benchmark
-
-            if (r == 1)
-            {
-                std::cout << "BOOST" << std::endl;
+            if (PRINT_LABELS != 1){
+                std::cout << "LEDA" << std::endl;
+                node_array<edge> pred(LG);
+                node_array<int> distance(LG);
 
                 elapsed_time = 0;
-                for (int t=0;t<RUN_TIMES;t++){
+                for(int t=0;t<RUN_TIMES;t++){
                     stopwatch.start();
-                    r = bellman_ford_shortest_paths(BG, n[i], weight_map(b_weight).distance_map(b_dist).predecessor_map(b_parent));
+                    r = BELLMAN_FORD_B_T(LG, s, l_weight, distance, pred);
                     stopwatch.stop();
                     elapsed_time += stopwatch.elapsed_time();
                 }
                 std::cout << "r = " << r << ", time average = " << elapsed_time / RUN_TIMES << std::endl;
-            }
-            else
-            {
-                std::cout << "not running for boost because leda found negative cycle" << std::endl;
+                // run boost benchmark
+
+                if (r == 1)
+                {
+                    std::cout << "BOOST" << std::endl;
+
+                    elapsed_time = 0;
+                    for (int t=0;t<RUN_TIMES;t++){
+                        stopwatch.start();
+                        r = bellman_ford_shortest_paths(BG, num_nodes, weight_map(b_weight).distance_map(b_dist).predecessor_map(b_parent));
+                        stopwatch.stop();
+                        elapsed_time += stopwatch.elapsed_time();
+                    }
+                    std::cout << "r = " << r << ", time average = " << elapsed_time / RUN_TIMES << std::endl;
+                }
+                else
+                {
+                    std::cout << "not running for boost because leda found negative cycle" << std::endl;
+                }
             }
         }
     }
