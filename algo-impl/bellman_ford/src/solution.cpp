@@ -118,7 +118,7 @@ inline void Update_pred(const BGraph &BG, vertex v,
         {
             if (in_R[w])
             {
-                pred[w] = index[v];
+                pred[w] = v;
             }
             Update_pred(BG, w, in_R, reached_from_node_in_U, pred, index);
         }
@@ -151,7 +151,7 @@ bool our_bellman(BGraph &BG, int n, WeightPrMap &c, DistanceMap &distmap, PredMa
     InQMap qmap = get(&NodeInfo::in_q, BG);
     InRMap rmap = get(&NodeInfo::in_r, BG);
     ReachedFromNodeInUMap reached_from_node = get(&NodeInfo::reached_from_node_in_U, BG);
-
+    //std::cout << "init" << std::endl;
     std::pair<vertex_iter, vertex_iter> vp;
     vertex s;
     for (vp = vertices(BG); vp.first != vp.second; ++vp.first)
@@ -201,7 +201,7 @@ bool our_bellman(BGraph &BG, int n, WeightPrMap &c, DistanceMap &distmap, PredMa
         for (boost::tie(ei, ei_end) = out_edges(u, BG); ei != ei_end; ++ei)
         {
             // e = *ei
-            vertex source = boost::source(*ei, BG);
+            vertex source = boost::source(*ei, BG);  // same as u
             vertex target = boost::target(*ei, BG);
 
             //returns target(e) if u = source(e) and source(e) oth- erwise.
@@ -216,7 +216,7 @@ bool our_bellman(BGraph &BG, int n, WeightPrMap &c, DistanceMap &distmap, PredMa
             if ((predmap[v] == NULL && v != s) || d < distmap[v])
             {
                 distmap[v] = d;
-                predmap[v] = u;
+                predmap[v] = u; 
 
                 if (!qmap[v])
                 {
@@ -226,6 +226,7 @@ bool our_bellman(BGraph &BG, int n, WeightPrMap &c, DistanceMap &distmap, PredMa
             }
         }
     }
+    //std::cout << "postprocessing" << std::endl;
 
     // BF: postprocessing
     if (predmap[s] != NULL)
@@ -249,14 +250,18 @@ bool our_bellman(BGraph &BG, int n, WeightPrMap &c, DistanceMap &distmap, PredMa
             remove_edge(source, target, BG);
         }
     }
+    //std::cout << "dfs" << std::endl;
+
     DFSVisitor vis(rmap);
     boost::depth_first_search(BG, boost::root_vertex(s).visitor(vis));
-    //restore_all_edges();
-    
+
+    // restore edges    
     for (std::vector<std::pair<vertex, vertex>>::iterator it = hidden.begin(); it != hidden.end(); ++it)
     {  
         add_edge(it->first, it->second, BG);
     }
+
+    //std::cout << "update_pred" << std::endl;
 
     // for all nodes v of G
     for (vp = vertices(BG); vp.first != vp.second; ++vp.first)
@@ -274,25 +279,30 @@ bool our_bellman(BGraph &BG, int n, WeightPrMap &c, DistanceMap &distmap, PredMa
     ReachedFromNodeInUMap reachable = reached_from_node;
     LabelMap label = labelmap;
     PredMap pred = predmap;
+    //std::cout << "plus" << std::endl;
 
     // condition (1)
     // forall_nodes v of G
     for (vp = vertices(BG); vp.first != vp.second; ++vp.first)
     {
-        if (v != s && s != NULL && v != NULL)
+        vertex v = *vp.first;
+
+        if (v != s)
         {
-            if (v != NULL && reachable[v] == false)
+            if (reachable[v] == false)
             {
                 labelmap[v] = PLUS;
             }
         }
     }
+    //std::cout << "finite" << std::endl;
 
     // classification of nodes
     if (pred[s] == NULL)
     {
         label[s] = FINITE;
     }
+    //std::cout << "CYCLE" << std::endl;
 
     // for all nodes again follow the path and label
     for (vp = vertices(BG); vp.first != vp.second; ++vp.first)
@@ -337,6 +347,7 @@ bool our_bellman(BGraph &BG, int n, WeightPrMap &c, DistanceMap &distmap, PredMa
             }
         }
     }
+   //std::cout << "neg cycle" << std::endl;
 
     bool neg_cycle_found = false;
     // condition (2)
@@ -384,7 +395,7 @@ bool our_bellman(BGraph &BG, int n, WeightPrMap &c, DistanceMap &distmap, PredMa
         }
     }
 
-    return neg_cycle_found || false;
+    return !neg_cycle_found;
 }
 
 void tests()

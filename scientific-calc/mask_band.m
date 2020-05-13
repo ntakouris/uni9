@@ -1,5 +1,4 @@
 function P = mask_band(n, type, p, q)
-% Author: T. NTAKOURIS, AM 1054332, Date : 10/12/2019
     if type == 'band'
         P = ones(n);
         % q = upper bandw

@@ -3,7 +3,7 @@
 #No args -> AM
 if [ $# -eq 0 ]
   then
-    echo "1054332-1054432"
+    echo "AM"
     exit
 fi
 

@@ -1,5 +1,3 @@
-% Author:  T. Ntakouris, AM 1054332, Date : 1/15/2019
-
 figure;
 semilogy(0:length(r1)-1,r1/norm(e),'b-o');
 hold on;

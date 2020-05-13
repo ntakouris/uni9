@@ -1,4 +1,3 @@
-% Author: T. NTAKOURIS, AM 1054332, Date : 10/12/2019
 % Code for generating or loading from file requested (3.1) matrices
 
 load bcsstm07.m

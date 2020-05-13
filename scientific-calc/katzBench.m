@@ -1,4 +1,3 @@
-% Author: T. NTAKOURIS, AM 1054332, Date : 12/12/2019
 % load email first
 tolerance = 1e-7;
 maxreps = 50;

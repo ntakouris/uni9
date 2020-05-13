@@ -1,5 +1,5 @@
 function matrix2latex2(matrix, filename, varargin)
-    % Author:   M. Koehler, T. Ntakouris, AM 1054332, Date : 10/12/2019
+    % Author:   M. Koehler
     % Contact:  koehler@in.tum.de, ntakouris@ceid.upatras.gr
     % Version:  1.2
     % Original Creation Date:     December 2019

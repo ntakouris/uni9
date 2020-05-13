@@ -1,5 +1,4 @@
 function [X] = multiKatz(A, alpha, mth, pcg_params)
-% Author: T. NTAKOURIS, AM 1054332, Date : 12/12/2019
     n = length(A);
     e = ones(n, 1);
     
