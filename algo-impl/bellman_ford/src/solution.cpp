@@ -1,4 +1,4 @@
-#define PRINT_LABELS 1
+#define PRINT_LABELS 0
 
 #define SKIP_RANDOM_GRAPHS 0
 #define SKIP_GRID_GRAPHS 0
@@ -481,7 +481,7 @@ void tests()
                 std::cout << "r = " << r << ", time average = " << elapsed_time / RUN_TIMES << std::endl;
                 // run boost benchmark
 
-                if (r == 1)
+                if (r == 0)
                 {
                     std::cout << "BOOST" << std::endl;
 
@@ -736,7 +736,7 @@ void tests()
                 std::cout << "r = " << r << ", time average = " << elapsed_time / RUN_TIMES << std::endl;
                 // run boost benchmark
 
-                if (r == 1)
+                if (r == 0)
                 {
                     std::cout << "BOOST" << std::endl;
 
