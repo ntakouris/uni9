@@ -124,20 +124,57 @@ triplet<float, float, float> MST_STATIC(const graph &G, edge_array<int> &cost, s
             vertex w = vertices[G.target(to_update)];
 
             D.cut(v, w);
+            // dfs to find connected component
+            node_array<bool> reached(G);
+            list<node> stack;
+            node s;
+            stack.push(G.source(to_update)); 
+            while (!stack.empty()) 
+            { 
+                s = stack.pop(); 
+        
+                if (reached[s]) 
+                { 
+                    continue;
+                } 
+        
+                reached[s] = true;
+                edge e;
+                forall_adj_edges(e, s){
+                    if (in_mst[e]) { // search only for edges inside mst
+                        node k = G.opposite(e, s);
+                        stack.push(k);
+                    }
+                }
+            } 
             
-            // TODO perform bfs/dfs to find out connected component nodes
-
-            // for each node and edge, if on other connected component
-            // find min cost and edge
-
             edge min_cost_edge;
-            int min_cost;
+            int min_cost = -1;
+
+            edge e;
+            forall_edges(e, G){
+                if (reached[G.source(e)] == reached[G.target(e)]) {
+                    continue; // should be in different connected component
+                }
+                if (min_cost == -1) {
+                    min_cost = cost[e];
+                    min_cost_edge = e;
+                    continue;
+                }
+
+                int cost_e = cost[e];
+                if (cost_e < min_cost) {
+                    min_cost = cost_e;
+                    min_cost_edge = e;
+                }
+            }
 
             // add min cost into mst
             mst.append(min_cost_edge);
             in_mst[min_cost_edge] = true;
-            // link dynamic tree too
-             D.link(vertices[G.source(min_cost_edge)], vertices[G.target(min_cost_edge)], min_cost);
+            
+            // do not forget to update-link dynamic tree too
+            D.link(vertices[G.source(min_cost_edge)], vertices[G.target(min_cost_edge)], min_cost);
         }
     }
     per_edge.stop();
@@ -220,17 +257,17 @@ void degree_fix(const Graph& G, edge_array<int> &cost){
 
 static std::vector<std::set<node>> printed;
 
-std::set<node> csearch(const graph &G, node &v, list<edge> &mst){
+std::set<node> csearch(const graph &G, node &v, edge_array<bool> &in_mst){
     std::set<node> cluster;
     cluster.insert(v);
     node w;
     //for all child nodes w of v
     edge e;
-    forall_edges(e, mst) {
-        if (G.source(e) == v || G.target(e) == v) { // only include mst edges
+    forall_adj_edges(e, v) {
+        if (in_mst[e]) {
             node w = G.opposite(v, e);
 
-            std::set<node> subcluster = csearch(G, w, mst);
+            std::set<node> subcluster = csearch(G, w, in_mst);
             std::set<node>::iterator it;
             for (it = subcluster.begin(); it != subcluster.end(); ++it) {
                 node n = *it;
@@ -290,7 +327,7 @@ triplet<float, float, float> MST_ONLINE(const graph &G, edge_array<int> &cost, s
     printed = clusters
 
     // essentially a dfs variant
-    std::set<node> cluster = csearch(G, root, mst);
+    std::set<node> cluster = csearch(G, root, in_mst);
     if (clusters.size() > 0) { // merge with last printed if empty is returned
         std::set<node> last_printed = printed.back();
 
