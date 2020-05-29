@@ -59,6 +59,8 @@ triplet<float, float, float> MST_STATIC(const graph &G, edge_array<int> &cost, s
         vertices[n] = D.make();
     }
 
+    map<vertex, node> vertex_to_node;
+
     // construct dynamic tree
     edge e;
     forall(e, T) {
@@ -67,6 +69,9 @@ triplet<float, float, float> MST_STATIC(const graph &G, edge_array<int> &cost, s
 
         vertex vs = vertices[source];
         vertex vt = vertices[target];
+
+        vertex_to_node[vs] = source;
+        vertex_to_node[vt] = target;
 
         D.link(vs, vt, cost[e]);
     }
@@ -101,18 +106,41 @@ triplet<float, float, float> MST_STATIC(const graph &G, edge_array<int> &cost, s
             D.link(v, w, new_cost);
 
             D.evert(v);
-            // find (x, y) edge on tree that got maximum cost on the cycle created
 
-            // TODO (x, y) = D.findmax(w);
-            // traverse parents till from v till reached w
-            // find maximum cost edge e
-            
-            // remove x, y edge from dynamic tree
-            D.cut(x, y);
+            vertex max_cost_vertex = w;
+            int max_cost = std::round(w);
 
-            // remove corresponding edge x, y from mst
-            mst.del(e);
-            in_mst[e] = false;
+            // find edge on tree that got maximum cost on the cycle created
+            vertex tmp = w; // D.findmax(w)
+            while (tmp != v){ // crash when no parent found -> graph not complete
+                vertex parent = D.parent(tmp);
+                // D.cost(v) = cost of v -> parent(v)
+                int cost = std::round(D.cost(tmp)); // D returns double but we only assign ints
+
+                if (cost > max_cost) {
+                    max_cost = cost;
+                    max_cost_vertex = tmp; // current one
+                }
+
+                tmp = parent;
+            }
+
+
+            node corresponding_target = vertex_to_node[D.parent(tmp)];
+            node corresponding_source = vertex_to_node[tmp];
+
+            edge e;
+            forall_adj_edges(e, corresponding_source) {
+                if (in_mst[e] && G.opposite(e, corresponding_target) == corresponding_target) {
+                    // remove corresponding edge x, y from mst
+                    mst.del(e);
+                    in_mst[e] = false;
+                    break;
+                }
+            }
+
+            // remove edge from dynamic tree too
+            D.cut(tmp); // cuts (v -> parent(v))
         }
 
         if (is_in_mst && new_cost > prev_cost) {
