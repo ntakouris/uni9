@@ -2,9 +2,14 @@
 #define DIFFERENT_EDGE_COST_TIMES 1 // how many times to make different edge cost update stream
 
 #include <math.h>
+#include <vector>
+#include <stack>
+#include <set>
+#include <algorithm>
+#include <utility>
 
 #include "LEDA/graph/graph.h"
-#include "LEDA/graph/graph/graph_misc.h"
+#include "LEDA/graph/graph_misc.h"
 #include "LEDA/core/random_source.h"
 #include "LEDA/core/p_queue.h"
 #include "LEDA/graph/node_partition.h"
@@ -37,18 +42,63 @@ triplet<T> make_triplet(const T &m1, const T &m2, const T &m3)
     return ans;
 }
 
-triplet<float, float, float> MST_STATIC(const graph &G, edge_array<int> &cost, std::vector<std::pair<edge,int>> &cost_updates){
+// copies a leda graph to another, edge costs included
+void copy_graph(graph& G, graph& H, edge_array<int>& cost_g, edge_array<int> &cost_h, 
+                    std::vector<std::pair<edge, int>> &updates_g, std::vector<std::pair<edge, int>> &updates_h){
+	node_array<node> copy_in_h(G);
+    edge_array<edge> e_copy_in_h(G);
+
+	edge e;
+	node n;
+	
+    //std::cout << "copying nodes" << std::endl;
+	forall_nodes(n, G){
+        node s = H.new_node();
+		copy_in_h[n] = s;
+	}
+
+    //std::cout << "copying edges" << std::endl;
+	forall_edges(e, G){
+        node h_src = copy_in_h[G.source(e)];
+        node h_trg = copy_in_h[G.target(e)];
+
+        edge h_e = H.new_edge(h_src, h_trg);
+        e_copy_in_h[e] = h_e;
+	}
+
+    edge_array<int> _cost(H); // re-init the list, nodes were missing on the first one
+
+    //std::cout << "copying edge costs" << std::endl;
+    forall_edges(e, G) {
+        _cost[e_copy_in_h[e]] = cost_g[e];
+    }
+
+    cost_h = _cost; // assign new edge_array
+
+    //std::cout << "copying edge cost updates" << std::endl;
+    std::vector<std::pair<edge, int>>::iterator it;
+    for (it = updates_g.begin(); it != updates_g.end(); ++it) {
+        std::pair<edge, int> pair = *it;
+        updates_h.push_back(std::make_pair(e_copy_in_h[pair.first], pair.second));
+    }
+}
+
+triplet<float> MST_STATIC(const graph &G, edge_array<int> &cost, std::vector<std::pair<edge,int>> &cost_updates){
+    std::cout << "MST_STATIC" << std::endl;
     // make mst
     timer mst_t;
-    mst_t.start();
-    list<edge> mst = MIN_SPANNING_TREE(g, cost);
 
-    edge_array<bool> in_mst;
+    mst_t.start();
+    list<edge> mst = MIN_SPANNING_TREE(G, cost);
+
+    edge_array<bool> in_mst(G);
     edge e;
+
     forall(e, mst) {
         in_mst[e] = true;
     }
 
+    std::cout << std::endl;
     // build dynamic tree
     dynamic_trees D;
 
@@ -62,8 +112,7 @@ triplet<float, float, float> MST_STATIC(const graph &G, edge_array<int> &cost, s
     map<vertex, node> vertex_to_node;
 
     // construct dynamic tree
-    edge e;
-    forall(e, T) {
+    forall(e, mst) {
         node source = G.source(e);
         node target = G.target(e);
 
@@ -80,25 +129,33 @@ triplet<float, float, float> MST_STATIC(const graph &G, edge_array<int> &cost, s
     // edge modifications
     timer per_edge;
 
+    std::cout << "edge modifications" << std::endl;
     per_edge.start();
     std::vector<std::pair<edge, int>>::iterator it;
+    int i;
     for (it = cost_updates.begin(); it != cost_updates.end(); ++it) {
+        std::cout << i << " "; i++;
         std::pair<edge, int> pair = *it;
         edge to_update = pair.first;
         int new_cost = pair.second;
-
+        std::cout << " is_in_mst";
         bool is_in_mst = in_mst[to_update];
+        std::cout << " prev_cost";
         int prev_cost = cost[to_update];
 
         if (is_in_mst && prev_cost >= new_cost || !is_in_mst && new_cost > prev_cost) {
+            std::cout << " skipping";
+
             cost[to_update] = new_cost;
             continue;
         }
 
         if (!is_in_mst && new_cost < prev_cost) {
+            std::cout << " D.findmax";
+
             cost[to_update] = new_cost;
             in_mst[to_update] = true;
-            mst.append(to_update)
+            mst.append(to_update);
 
             vertex v = vertices[G.source(to_update)];
             vertex w = vertices[G.target(to_update)];
@@ -108,7 +165,7 @@ triplet<float, float, float> MST_STATIC(const graph &G, edge_array<int> &cost, s
             D.evert(v);
 
             vertex max_cost_vertex = w;
-            int max_cost = std::round(w);
+            int max_cost = new_cost;
 
             // find edge on tree that got maximum cost on the cycle created
             vertex tmp = w; // D.findmax(w)
@@ -125,15 +182,16 @@ triplet<float, float, float> MST_STATIC(const graph &G, edge_array<int> &cost, s
                 tmp = parent;
             }
 
-
             node corresponding_target = vertex_to_node[D.parent(tmp)];
             node corresponding_source = vertex_to_node[tmp];
 
             edge e;
+            // idk if there is a more efficient way to get an edge between 
+            // a source and target node, if it exists, null otherwise
             forall_adj_edges(e, corresponding_source) {
                 if (in_mst[e] && G.opposite(e, corresponding_target) == corresponding_target) {
                     // remove corresponding edge x, y from mst
-                    mst.del(e);
+                    mst.remove(e);
                     in_mst[e] = false;
                     break;
                 }
@@ -144,14 +202,19 @@ triplet<float, float, float> MST_STATIC(const graph &G, edge_array<int> &cost, s
         }
 
         if (is_in_mst && new_cost > prev_cost) {
+            std::cout << " CC Cycle";
+
             cost[to_update] = new_cost;
-            mst.del(to_update);
+            mst.remove(to_update);
             in_mst[to_update] = false;
 
+            // v -> w
             vertex v = vertices[G.source(to_update)];
             vertex w = vertices[G.target(to_update)];
 
-            D.cut(v, w);
+            D.evert(w); // required for cut
+            D.cut(v); // deletes v, parent(v) (= v, w)
+
             // dfs to find connected component
             node_array<bool> reached(G);
             list<node> stack;
@@ -207,7 +270,7 @@ triplet<float, float, float> MST_STATIC(const graph &G, edge_array<int> &cost, s
     }
     per_edge.stop();
 
-    return make_triplet<mst_t.elapsed_time(), 0, per_edge.elapsed_time()>;
+    return make_triplet(mst_t.elapsed_time(), (float) 0, per_edge.elapsed_time());
 }
 
 // performs the transformation from Go -> G
@@ -215,286 +278,286 @@ triplet<float, float, float> MST_STATIC(const graph &G, edge_array<int> &cost, s
 // page 4 of original document, page 7 of scanned pdf from purdue university
 // we dont care about costs, we just want to fix the degrees
 // we will assign random costs later
-void degree_fix(const Graph& G, edge_array<int> &cost){
-    std::vector<node> to_delete;
+// void degree_fix(const graph& G, edge_array<int> &cost, std::vector<std::pair<edge, int>> &cost_updates){
+//     std::vector<node> to_delete;
 
-    node anchor;
-    forall_nodes(anchor, G) {
-        int d = G.degree(anchor);
-        if (d > 3) { 
-            int n_to_add = 3;
+//     node anchor;
+//     forall_nodes(anchor, G) {
+//         int d = G.degree(anchor);
+//         if (d > 3) { 
+//             int n_to_add = 3;
 
-            std::vector<node> adjacent_w;
-            std::vector<node> edges_w;
-            std::vector<node> adjacent_v;
-            node w;
-            edge e;
-            forall_edges(e, anchor) {
-                edges_w.push_back(e);
-                adjacent_w.push_back(G.opposite(anchor, e));
-            }
+//             std::vector<node> adjacent_w;
+//             std::vector<node> edges_w;
+//             std::vector<node> adjacent_v;
+//             node w;
+//             edge e;
+//             forall_adj_edges(e, anchor) {
+//                 edges_w.push_back(e);
+//                 adjacent_w.push_back(G.opposite(anchor, e));
+//             }
 
-            // replace w with new v
-            std::vector<node>::iterator it;
-            for (it = adjacent_w.begin(); it != adjacent_w.end(); ++it) {
-                w = *it;
-                // add new node v
-                node v = G.new_node();
-                adjacent_v.push_back(v);
-            }
+//             // replace w with new v
+//             std::vector<node>::iterator it;
+//             for (it = adjacent_w.begin(); it != adjacent_w.end(); ++it) {
+//                 w = *it;
+//                 // add new node v
+//                 node v = G.new_node();
+//                 adjacent_v.push_back(v);
+//             }
 
-            // connect v[i] with v[i+1 mod d] with cost 0
-            for (int i = 0; i < d; i++) {
-                int idx_src = i;
-                int idx_trg = (i + 1) % d;
-                node src = adjacent_v[idx_src];
-                node trg = adjacent_v[idx_end];
-                e = G.new_edge(src, trg);
+//             // connect v[i] with v[i+1 mod d] with cost 0
+//             for (int i = 0; i < d; i++) {
+//                 int idx_src = i;
+//                 int idx_trg = (i + 1) % d;
+//                 node src = adjacent_v[idx_src];
+//                 node trg = adjacent_v[idx_trg];
+//                 e = G.new_edge(src, trg);
 
-                cost[e] = 0;
-            }
+//                 cost[e] = 0;
+//             }
 
-            // add w[i] -> anchor with w[i] -> v[i] with the same cost
-            for (int i = 0; i < d; i++) {
-                edge original = edges_w[i];
-                int c = cost[original];
-                e = G.new_edge(adjacent_w[i], adjacent_v[i]);
+//             // add w[i] -> anchor with w[i] -> v[i] with the same cost
+//             for (int i = 0; i < d; i++) {
+//                 edge original = edges_w[i];
+//                 int c = cost[original];
+//                 e = G.new_edge(adjacent_w[i], adjacent_v[i]);
 
-                cost[e] = c;
+//                 cost[e] = c;
 
-                /* Update cost changes stream */
-                std::vector<std::pair<edge, int>>::iterator it;
-                for (it = cost_updates.begin(); it != cost_updates.end(); ++it) {
-                    std::pair p = *it;
+//                 /* Update cost changes stream */
+//                 std::vector<std::pair<edge, int>>::iterator it;
+//                 for (it = cost_updates.begin(); it != cost_updates.end(); ++it) {
+//                     std::pair<edge, int> p = *it;
 
-                    if (p.first == original) {
-                        p.first = e;
-                    }
-                }
-            }
+//                     if (p.first == original) {
+//                         p.first = e;
+//                     }
+//                 }
+//             }
 
-            // remove adjacent_w edges and anchor
-            for (int i = 0; i < d; i++) {
-                G.hide_edge(edges_w[i]); // you could also hide
-            }
+//             // remove adjacent_w edges and anchor
+//             for (int i = 0; i < d; i++) {
+//                 G.hide_edge(edges_w[i]); // you could also hide
+//             }
 
-            G.hide_node(anchor); //otherwise possible iteration exception? idk
-        }
-    }
-}
+//             G.hide_node(anchor); //otherwise possible iteration exception? idk
+//         }
+//     }
+// }
 
-static std::vector<std::set<node>> printed;
+// static std::vector<std::set<node>> printed;
 
-std::set<node> csearch(const graph &G, node &v, edge_array<bool> &in_mst){
-    std::set<node> cluster;
-    cluster.insert(v);
-    node w;
-    //for all child nodes w of v
-    edge e;
-    forall_adj_edges(e, v) {
-        if (in_mst[e]) {
-            node w = G.opposite(v, e);
+// std::set<node> csearch(const graph &G, node &v, edge_array<bool> &in_mst){
+//     std::set<node> cluster;
+//     cluster.insert(v);
+//     node w;
+//     //for all child nodes w of v
+//     edge e;
+//     forall_adj_edges(e, v) {
+//         if (in_mst[e]) {
+//             node w = G.opposite(v, e);
 
-            std::set<node> subcluster = csearch(G, w, in_mst);
-            std::set<node>::iterator it;
-            for (it = subcluster.begin(); it != subcluster.end(); ++it) {
-                node n = *it;
-                cluster.insert(n);
-            }
-        }
-    }
+//             std::set<node> subcluster = csearch(G, w, in_mst);
+//             std::set<node>::iterator it;
+//             for (it = subcluster.begin(); it != subcluster.end(); ++it) {
+//                 node n = *it;
+//                 cluster.insert(n);
+//             }
+//         }
+//     }
 
-    if (cluster.size() < z) {
-        return cluster;
-    } else {
-        printed = cluster;
-        std::set<node> empty;
-        return empty; // supposed returned empty set
-    }
+//     if (cluster.size() < z) {
+//         return cluster;
+//     } else {
+//         printed = cluster;
+//         std::set<node> empty;
+//         return empty; // supposed returned empty set
+//     }
 
-}
+// }
 
 // builds the mst in a streaming-iterative fashion
-triplet<float, float, float> MST_ONLINE(const graph &G, edge_array<int> &cost, std::vector<std::pair<edge,int>> &cost_updates){
-    // make degree fix and make mst
-    timer mst_t;
-    mst_t.start();
-    degree_fix(g, cost, cost_updates);
-    list<edge> mst = MIN_SPANNING_TREE(g, cost);
-    mst_t.stop();
+// triplet<float> MST_ONLINE(const graph &G, edge_array<int> &cost, std::vector<std::pair<edge,int>> &cost_updates){
+//     // make degree fix and make mst
+//     timer mst_t;
+//     mst_t.start();
+//     degree_fix(G, cost, cost_updates);
+//     list<edge> mst = MIN_SPANNING_TREE(G, cost);
+//     mst_t.stop();
 
-    edge_array<bool> in_mst(G);
-    edge e;
-    forall(e, mst) {
-        in_mst[e] = true;
-    }
+//     edge_array<bool> in_mst(G);
+//     edge e;
+//     forall(e, mst) {
+//         in_mst[e] = true;
+//     }
 
-    timer cluster_timer;
-    cluster_timer.start();
-    /* FINDCLUSTERS */
-    // find some leaf node of mst and assign as root
-    node root;
+//     timer cluster_timer;
+//     cluster_timer.start();
+//     /* FINDCLUSTERS */
+//     // find some leaf node of mst and assign as root
+//     node root;
 
-    forall_edges(e, mst) {
-        node n = G.source(e);
-        int deg = 0;
-        edge ae;
-        forall_adj_edges(ae, n){
-            if (in_mst[ae]) {
-                deg++;
-            }
-        }
+//     forall(e, G) {
+//         node n = G.source(e);
+//         int deg = 0;
+//         edge ae;
+//         forall_adj_edges(ae, n){
+//             if (in_mst[ae]) {
+//                 deg++;
+//             }
+//         }
 
-        if (deg == 1) {
-            root = n;
-            break;
-        }
-    }
+//         if (deg == 1) {
+//             root = n;
+//             break;
+//         }
+//     }
 
-    std::vector<std::set<node>> clusters;
-    printed = clusters
+//     std::vector<std::set<node>> clusters;
+//     printed = clusters
 
-    // essentially a dfs variant
-    std::set<node> cluster = csearch(G, root, in_mst);
-    if (clusters.size() > 0) { // merge with last printed if empty is returned
-        std::set<node> last_printed = printed.back();
+//     // essentially a dfs variant
+//     std::set<node> cluster = csearch(G, root, in_mst);
+//     if (clusters.size() > 0) { // merge with last printed if empty is returned
+//         std::set<node> last_printed = printed.back();
 
-        std::set<node>::iterator it;
-        for (it = printed.begin(); it != printed.end(); ++it) {
-            node n = *it;
-            last_printed.insert(n);
-        }
-    }
+//         std::set<node>::iterator it;
+//         for (it = printed.begin(); it != printed.end(); ++it) {
+//             node n = *it;
+//             last_printed.insert(n);
+//         }
+//     }
 
-    clusters = printed;
-    // make map from clusters to idx
-    node_array<int> cluster_to_index(G);
-    int total_clusters = clusters.size();
+//     clusters = printed;
+//     // make map from clusters to idx
+//     node_array<int> cluster_to_index(G);
+//     int total_clusters = clusters.size();
 
-    for (int i = 0; i < clusters.size(); i++) {
-        std::set<node> current_cluster = clusters[i];
+//     for (int i = 0; i < clusters.size(); i++) {
+//         std::set<node> current_cluster = clusters[i];
 
-        std::set<node>::iterator it;
-        for (it = current_cluster.begin(); it != current_cluster.end(); ++it) {
-            cluster_to_index[*it] = i;
-        }
-    }
+//         std::set<node>::iterator it;
+//         for (it = current_cluster.begin(); it != current_cluster.end(); ++it) {
+//             cluster_to_index[*it] = i;
+//         }
+//     }
 
-    map<std::pair<int, int>, edge> min_set_cost;
-    edge_array<std::pair<int, int>> edge_set(G);
-    // partition edges to E_i,j sets
-    // and map E_i,j sets to min cost map
-    forall_edges(e, mst) {
-        node src = G.source(e);
-        node trg = G.target(e);
+//     map<std::pair<int, int>, edge> min_set_cost;
+//     edge_array<std::pair<int, int>> edge_set(G);
+//     // partition edges to E_i,j sets
+//     // and map E_i,j sets to min cost map
+//     forall(e, mst) {
+//         node src = G.source(e);
+//         node trg = G.target(e);
 
-        std::pair set_descriptor = std::make_pair<cluster_to_index[src], cluster_to_index[trg]>;
-        edge_set[e] = set_descriptor;
-        if (!min_set_cost.defined(set_descriptor)) {
-            min_set_cost[set_descriptor] = e;
-        } else if (cost[min_set_cost[set_descriptor]] > cost[e]) {
-            min_set_cost[set_descriptor] = e;
-        }
-    }
-    cluster_timer.stop();
-    /* END FINDCLUSTERS */
+//         std::pair<int, int> set_descriptor = std::make_pair(cluster_to_index[src], cluster_to_index[trg]);
+//         edge_set[e] = set_descriptor;
+//         if (!min_set_cost.defined(set_descriptor)) {
+//             min_set_cost[set_descriptor] = e;
+//         } else if (cost[min_set_cost[set_descriptor]] > cost[e]) {
+//             min_set_cost[set_descriptor] = e;
+//         }
+//     }
+//     cluster_timer.stop();
+//     /* END FINDCLUSTERS */
 
-    // edge modifications
-    timer per_edge;
+//     // edge modifications
+//     timer per_edge;
 
-    per_edge.start();
-    std::vector<std::pair<edge, int>>::iterator it;
-    for (it = cost_updates.begin(); it != cost_updates.end(); ++it) {
-        std::pair<edge, int> pair = *it;
-        edge to_update = pair.first;
-        int cluster_src = cluster_to_index[G.source(to_update)];
-        int cluster_trg = cluster_to_index[G.target(to_update)];
+//     per_edge.start();
+//     std::vector<std::pair<edge, int>>::iterator it;
+//     for (it = cost_updates.begin(); it != cost_updates.end(); ++it) {
+//         std::pair<edge, int> pair = *it;
+//         edge to_update = pair.first;
+//         int cluster_src = cluster_to_index[G.source(to_update)];
+//         int cluster_trg = cluster_to_index[G.target(to_update)];
 
-        int new_cost = pair.second;
+//         int new_cost = pair.second;
 
-        bool is_in_mst = in_mst[to_update];
-        int prev_cost = cost[to_update];
+//         bool is_in_mst = in_mst[to_update];
+//         int prev_cost = cost[to_update];
 
-        if (is_in_mst && prev_cost >= new_cost || !is_in_mst && new_cost > prev_cost) {
-            cost[to_update] = new_cost;
-            continue;
-        }
+//         if (is_in_mst && prev_cost >= new_cost || !is_in_mst && new_cost > prev_cost) {
+//             cost[to_update] = new_cost;
+//             continue;
+//         }
 
-        // non tree edge decreased
-        if (!is_in_mst && new_cost < prev_cost) {
-            cost[to_update] = new_cost;
-            // add edge to mst
-            // find cycle
+//         // non tree edge decreased
+//         if (!is_in_mst && new_cost < prev_cost) {
+//             cost[to_update] = new_cost;
+//             // add edge to mst
+//             // find cycle
 
-            // remove max edge cost from there
+//             // remove max edge cost from there
 
-            // if edge (v, w) is removed and (x, y) added
+//             // if edge (v, w) is removed and (x, y) added
 
-            // if x and y are in different clusters
-            // or x, y, v, in same cluster, continue
+//             // if x and y are in different clusters
+//             // or x, y, v, in same cluster, continue
 
-            // else
-            // split cluster i
-            // update all sets with i-j (for j)
+//             // else
+//             // split cluster i
+//             // update all sets with i-j (for j)
             
-            // if new clusters got less than z vertices
-            // combine with neighbour
+//             // if new clusters got less than z vertices
+//             // combine with neighbour
             
-            // if neighbouring cluster got more than 3z-2 vertices
-            // split to 2 clusters using csearch
-        }
+//             // if neighbouring cluster got more than 3z-2 vertices
+//             // split to 2 clusters using csearch
+//         }
 
-        // tree edge increased
-        if (is_in_mst && new_cost > prev_cost) {
-            cost[to_update] = new_cost;
+//         // tree edge increased
+//         if (is_in_mst && new_cost > prev_cost) {
+//             cost[to_update] = new_cost;
 
-            in_mst[to_update] = false;
-            mst.del(to_update);
+//             in_mst[to_update] = false;
+//             mst.del(to_update);
 
-            // remove from mst
-            // find edge that connects the 2 connected components - clusters
-            if (cluster_src == cluster_trg) {
-                int clust = cluster_src;
-                // split clust into 2 clusters
-                    // figure out where the 2 clusters split
-                    // make one clust A
-                    // make one clust B
+//             // remove from mst
+//             // find edge that connects the 2 connected components - clusters
+//             if (cluster_src == cluster_trg) {
+//                 int clust = cluster_src;
+//                 // split clust into 2 clusters
+//                     // figure out where the 2 clusters split
+//                     // make one clust A
+//                     // make one clust B
 
-                    // make clust A = clust
+//                     // make clust A = clust
 
-                    // move each clust_i to clust_i + 1, for i > clust
-                    // make clust b clust + 1
+//                     // move each clust_i to clust_i + 1, for i > clust
+//                     // make clust b clust + 1
 
-                    // increment clust size;
+//                     // increment clust size;
 
-                // adjust minimum cost sets by incrementing all > clust by 1
-            }
+//                 // adjust minimum cost sets by incrementing all > clust by 1
+//             }
 
-            // do a bfs to find out connected components
+//             // do a bfs to find out connected components
 
-            edge edge_min;
-            // find edge_min
+//             edge edge_min;
+//             // find edge_min
 
-            // if minimum cost edge is found which is not the same as the one to update
-            mst.append(edge_min);
-            in_mst[edge_min] = true;
-        }
-    }
-    per_edge.stop();
+//             // if minimum cost edge is found which is not the same as the one to update
+//             mst.append(edge_min);
+//             in_mst[edge_min] = true;
+//         }
+//     }
+//     per_edge.stop();
 
-    make_triplet<mst_t.elapsed_time(), cluster_timer.elapsed_time(), per_edge.elapsed_time()>;
-}
+//     float mst_time = mst_t.elapsed_time();
+//     float cluster_time = cluster_timer.elapsed_time();
+//     float per_edge_time = per_edge.elapsed_time(); 
+
+//     make_triplet(mst_time, cluster_time, per_edge_time);
+// }
 
 
-void benchmark(const graph &G, edge_array<int> &cost, int n, int m){
+void benchmark(graph &G, edge_array<int> &cost, int n, int m){
     random_source S;
-
-    std::vector<edge> edges;
     edge e;
-    forall_edges(e, G) {
-        edges.push_back(e);
-    }
 
+    float elapsed_time = 0;
     float mst_online_preproc = 0;
     float mst_static_preproc = 0;
 
@@ -504,92 +567,83 @@ void benchmark(const graph &G, edge_array<int> &cost, int n, int m){
     float cluster_time = 0;
     float mst_online_per_edge = 0;
     float mst_static_per_edge = 0;
+    float elapsed_per_edge = 0;
 
     // create random stream of edge costs to update
-    for (int i = 1; i < DIFFERENT_EDGE_COST_TIMES; i++) {
-        int s = m * i; // how many random edge-cost updates to do
+    for (int i = 1; i < DIFFERENT_EDGE_COST_TIMES+1; i++) {
+        int s = m * 3; // how many random edge-cost updates to do
 
         std::vector<std::pair<edge, int>> cost_updates;
 
         // generate random edge-cost pairs
-        int edge_size = edges.size();
-        for (int __x = 0; __x < s; __x++){
-            
-            int rand_idx;
-            S >> rand_idx;
-            rand_idx = rand_idx % edge_size;
-
+        //std::cout << "making edge updates: " << std::endl;
+        for (int b = 0; b < s; b++){
             int c;
             S >> c;
-            int rand_cost = (c % (EDGE_COST_MAX – EDGE_COST_MIN + 1)) + EDGE_COST_MIN)
-
-            cost_updates.push_back(std::make_pair<edges[rand_idx], rand_cost>);
-        }
-
-        // bechmarks    
-        elapsed_time = 0;
-        float elapsed_per_edge = 0;
-
-        for (int i = 0; i < BENCH_TIMES; i++) {
-            // copy mst, G and edge costs so that there is a fresh copy
-            graph h;
-            CopyGraph(h, G);
-            edge_array<int> h_cost(h);
-            edge e;
-            forall_edges(e, h) {
-                // http://www.algorithmic-solutions.info/leda_manual/graph_misc.html
-                // ^ docs say that h[e] corresponds to G[e]
-                h_cost[e] = cost[h[e]];
-            }
-
-            // https://www.leda-tutorial.org/en/official/ch02s03s06.html
-            // ^ copy list
-            list<edge> h_mst = mst;
-
-            // copy edge stream too - it gets affected by degree_fix()
-            std::vector<std::pair<edge, int>> h_cost_updates(cost_updates);
-
-            t.start();
+            int rand_cost = ((c % (EDGE_COST_MAX - EDGE_COST_MIN + 1)) + EDGE_COST_MIN);
             
-            triplet<float, float, float> p = MST_ONLINE(h, h_cost, h_mst, h_cost_updates);
-
-            mst_online_preproc += p.first;
-            cluster_time += p.middle;
-            elapsed_per_edge += p.last;
-            t.stop();
-
-            elapsed_time += t.elapsed_time();
+            cost_updates.push_back(std::make_pair(G.choose_edge(), rand_cost));
+            //std::cout << rand_cost << ":" << rand_idx << " ";
         }
 
-        mst_online_time += elapsed_time;
-        mst_online_per_edge += elapsed_per_edge;
+        std::cout << std::endl << "cost_updates len: " << cost_updates.size() << std::endl;
+
+    //     // bechmarks    
+    //     elapsed_time = 0;
+    //     elapsed_per_edge = 0;
+    //     timer t;
+    //     for (int i = 0; i < BENCH_TIMES; i++) {
+    //         // copy mst, G and edge costs so that there is a fresh copy
+    //         graph h;
+    //         CopyGraph(h, G);
+    //         edge_array<int> h_cost(h);
+    //         edge e;
+    //         forall_edges(e, h) {
+    //             // http://www.algorithmic-solutions.info/leda_manual/graph_misc.html
+    //             // ^ docs say that h[e] corresponds to G[e]
+    //             h_cost[e] = cost[h[e]];
+    //         }
+
+    //         // https://www.leda-tutorial.org/en/official/ch02s03s06.html
+    //         // ^ copy list
+    //         list<edge> h_mst = mst;
+
+    //         // copy edge stream too - it gets affected by degree_fix()
+    //         std::vector<std::pair<edge, int>> h_cost_updates(cost_updates);
+
+    //         t.start();
+            
+    //         triplet<float, float, float> p = MST_ONLINE(h, h_cost, h_mst, h_cost_updates);
+
+    //         mst_online_preproc += p.first;
+    //         cluster_time += p.middle;
+    //         elapsed_per_edge += p.last;
+    //         t.stop();
+
+    //         elapsed_time += t.elapsed_time();
+    //     }
+
+    //     mst_online_time += elapsed_time;
+    //     mst_online_per_edge += elapsed_per_edge;
 
         /* mst static */
         elapsed_time = 0;
         elapsed_per_edge = 0;
 
-        for (int i = 0; i < BENCH_TIMES; i++) {
+        timer t;
+        for (int i = 0; i < BENCH_TIMES+1; i++) {
             // copy mst, G and edge costs so that there is a fresh copy
             graph h;
-            CopyGraph(h, G);
             edge_array<int> h_cost(h);
-            edge e;
-            forall_edges(e, h) {
-                // http://www.algorithmic-solutions.info/leda_manual/graph_misc.html
-                // ^ docs say that h[e] corresponds to G[e]
-                h_cost[e] = cost[h[e]];
-            }
-
-            // https://www.leda-tutorial.org/en/official/ch02s03s06.html
-            // ^ copy list
-            list<edge> h_mst = mst;
+            std::vector<std::pair<edge, int>> h_cost_updates;
+            copy_graph(G, h, cost, h_cost, cost_updates, h_cost_updates);
 
             t.start();
             
-            triplet<float, float, float> p = MST_STATIC(h, h_cost, h_mst, cost_updates);
+            triplet<float> p = MST_STATIC(h, h_cost, h_cost_updates);
 
-            mst_static_preproc += p.first;
-            elapsed_per_edge += p.last;
+            mst_static_preproc += (float) p.first;
+            elapsed_per_edge += (float) p.last;
 
             t.stop();
             elapsed_time += t.elapsed_time();
@@ -601,7 +655,7 @@ void benchmark(const graph &G, edge_array<int> &cost, int n, int m){
 
     std::cout << std::endl << std::endl;
 
-    int t = DIFFERENT_EDGE_COST_TIMES + BENCH_TIMES;
+    int t = DIFFERENT_EDGE_COST_TIMES * BENCH_TIMES;
     std::cout << "MST_ONLINE: " << (mst_online_time / t) << ", preproc: " << (mst_online_preproc / t) << " , per edge: " << (mst_online_per_edge / t) << " cluster time: " << (cluster_time / t) << std::endl;
     std::cout << "MST_STATIC: " << (mst_static_time / t) << ", preproc: " << (mst_static_preproc / t) << " , per edge: " << (mst_static_per_edge / t) << std::endl;
 }
@@ -619,7 +673,7 @@ int tests()
 
         // generate connected graph with n nodes and m edges
         graph g;
-        random_loop_free_graph(g, n, m);
+        random_simple_loopfree_graph(g, n, m);
         Make_Connected(g);
         g.make_undirected();
 
@@ -628,12 +682,12 @@ int tests()
         forall_edges(e, g) {
             int c;
             S >> c;
-            cost[e] = (c % (EDGE_COST_MAX – EDGE_COST_MIN + 1)) + EDGE_COST_MIN);
+            cost[e] = ((c % (EDGE_COST_MAX - EDGE_COST_MIN + 1)) + EDGE_COST_MIN);
         }
 
-        z = max(1, pow(m, 2/5)); // see paper
+        z = max(1.0, pow(m, 2/5)); // see paper
 
-        std::cout << "Random Graph (" << n << ", " << m << ") " << i << std::endl;
+        std::cout << "Random Graph (" << n << ", " << m << ") " << std::endl;
         benchmark(g, cost, n, m);
     }
 
