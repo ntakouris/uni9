@@ -127,7 +127,7 @@ triplet<float> MST_STATIC(const graph &G, edge_array<int> &cost, std::vector<std
     // edge modifications
     timer per_edge;
 
-    std::cout << "edge modifications" << std::endl;
+    // std::cout << "edge modifications" << std::endl;
     per_edge.start();
     std::vector<std::pair<edge, int>>::iterator it;
     int i = 0;
@@ -140,14 +140,14 @@ triplet<float> MST_STATIC(const graph &G, edge_array<int> &cost, std::vector<std
         int prev_cost = cost[to_update];
 
         if (is_in_mst && prev_cost >= new_cost || !is_in_mst && new_cost > prev_cost) {
-            std::cout << "Skip" << std::endl;
+            // std::cout << "Skip" << std::endl;
 
             cost[to_update] = new_cost;
             continue;
         }
 
         if (!is_in_mst && new_cost < prev_cost) {
-            std::cout << "D.findmax" << std::endl;
+            // std::cout << "D.findmax" << std::endl;
 
             cost[to_update] = new_cost;
 
@@ -157,19 +157,17 @@ triplet<float> MST_STATIC(const graph &G, edge_array<int> &cost, std::vector<std
             vertex v = vertices[G.source(to_update)];
             vertex w = vertices[G.target(to_update)];
 
-            std::cout << "D.evert " << v << std::endl;
+            // std::cout << "D.evert " << v << std::endl;
             D.evert(v);
 
             vertex max_cost_vertex = w;
             int max_cost = new_cost;
 
             // find edge on tree that got maximum cost on the cycle created
-            std::cout << "findmax in cycle" << std::endl;
+            // std::cout << "findmax in cycle" << std::endl;
             vertex tmp = w; // D.findmax(w)
             vertex tmp_kid = NULL;
-            int its = 0;
             while (tmp != v){ // from w to root v
-                its++;
                 vertex parent = D.parent(tmp);
 
                 // D.cost(v) = cost of v -> parent(v)
@@ -188,27 +186,14 @@ triplet<float> MST_STATIC(const graph &G, edge_array<int> &cost, std::vector<std
                 tmp_kid = tmp;
             }
 
-            // if (its == 1) {
-            //     continue;
-            // }
-
-            std::cout << its << " end findmax in cycle " << tmp << std::endl;
+            //std::cout << its << " end findmax in cycle " << tmp << std::endl;
 
             // if there is no change, the above part is going to restore the previously deleted edge (in mst)
             // else, its going to add the correct new one
-            
-            node corresponding_target;
-            node corresponding_source;
+            node corresponding_target = vertex_to_node[D.parent(tmp)];
+            node corresponding_source = vertex_to_node[tmp];
 
-            if (D.parent(tmp) == NULL) {
-                corresponding_target = vertex_to_node[tmp];
-                corresponding_source = vertex_to_node[tmp_kid];
-            }else{
-                node corresponding_target = vertex_to_node[D.parent(tmp)];
-                node corresponding_source = vertex_to_node[tmp];
-            }
-
-            std::cout << "fix mst " << corresponding_source << " " << corresponding_target << std::endl;
+            //std::cout << "fix mst " << corresponding_source << " " << corresponding_target << std::endl;
             // idk if there is a more efficient way to get an edge between 
             // a source and target node, if it exists, null otherwise
             edge e;
@@ -222,17 +207,17 @@ triplet<float> MST_STATIC(const graph &G, edge_array<int> &cost, std::vector<std
             }
 
             if (tmp != v) {
-                std::cout << "D.cut " << tmp << std::endl;
-                D.cut(tmp);
-
-                std::cout << "D.link " << v << " " << w << " " << new_cost << std::endl;
+                //std::cout << "D.link " << v << " " << w << " " << new_cost << std::endl;
                 D.link(v, w, new_cost);
+
+                //std::cout << "D.cut " << tmp << std::endl;
+                D.cut(tmp);
             }
 
         }
 
         if (is_in_mst && new_cost > prev_cost) {
-            std::cout << "CC Cycle" << std::endl;
+            // std::cout << "CC Cycle" << std::endl;
 
             // temporarily remove current edge from mst
             // to find connected components
@@ -241,7 +226,7 @@ triplet<float> MST_STATIC(const graph &G, edge_array<int> &cost, std::vector<std
             in_mst[to_update] = false;
 
             // dfs to find connected component
-            std::cout << "find component" << std::endl;
+            // std::cout << "find component" << std::endl;
             node_array<bool> reached(G);
             list<node> stack;
             node s;
@@ -268,7 +253,7 @@ triplet<float> MST_STATIC(const graph &G, edge_array<int> &cost, std::vector<std
             edge min_cost_edge;
             int min_cost = -1;
 
-            std::cout << "find min cost edge" << std::endl;
+            // std::cout << "find min cost edge" << std::endl;
             edge e;
             forall_edges(e, G){
                 if (reached[G.source(e)] == reached[G.target(e)]) {
@@ -296,46 +281,26 @@ triplet<float> MST_STATIC(const graph &G, edge_array<int> &cost, std::vector<std
             // do not forget to update-link dynamic tree too
             if (min_cost_edge != to_update){
                 // update only if it is a different edge
-                // cut to_update
-                // => cut (v -> w)
                 vertex v = vertices[G.source(to_update)];
                 vertex w = vertices[G.target(to_update)];
 
-                // TODO: do we need this update logic ?
-                // cut the v->w corresponding in D
-                if (vertices[G.source(min_cost_edge)] != v){
-                    if (D.root(v) != v && D.parent(v) == w){
-                        D.cut(v);
-                        std::cout << "cut v" << std::endl;
-                    } else if(D.root(w) != w && D.parent(w) == v){
-                        D.cut(w);
-                        std::cout << "cut w" << std::endl;
-                    } else {
-                        D.evert(v);
-                        
-                        if (D.parent(w) == v) {
-                            D.cut(w);                    
-                            std::cout << "evert v cut w" << std::endl;
-                        } else if (D.parent(v) == w){
-                            std::cout << "evert w cut v" << std::endl;
+                //std::cout << "D.evert " << v << std::endl;
+                //D.evert(v);
 
-                            D.evert(w);
-                            D.cut(v);
-                        } else {
-                            std::cout << "what" << std::endl;
-                        }
-                    }
+                // add the new one
+                //vertex new_v = vertices[G.source(min_cost_edge)];
+                //vertex new_w = vertices[G.target(min_cost_edge)];
+                //if (D.parent(w) !=)
+                //std::cout << "link mce "<< new_v << ", " << new_w << std::endl;
+                //D.link(new_v, new_w, min_cost);
 
-                    // add the new one
-                    std::cout << "link mce" << std::endl;
-                    D.link(vertices[G.source(min_cost_edge)], vertices[G.target(min_cost_edge)], min_cost);
-                }
+                //std::cout << "D.cut " << w << std::endl;
+                //D.cut(w);
             }
+            
         }
     }
     per_edge.stop();
-
-    std::cout << "return MST_STATIC" << std::endl;
 
     return make_triplet(mst_t.elapsed_time(), (float) 0, per_edge.elapsed_time());
 }
