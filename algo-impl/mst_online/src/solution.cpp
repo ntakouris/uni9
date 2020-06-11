@@ -324,15 +324,26 @@ void degree_fix(graph& G, edge_array<int> &cost, std::vector<std::pair<edge, int
     /* G's original edges to new mapped edges (used for cost_updates) */
     dictionary<edge, edge> edge_map;
 
+    /* use this instead of the cost edge_array, issues when G.new_edge or node is added */
+    dictionary<edge, int> temp_cost;
+
+    edge _e;
+    forall_edges(_e, G){
+        temp_cost.insert(_e, 0);
+    }
+
+    int nodes_added_cnt = 0;
+    int edges_added_cnt = 0;
+
     node anchor;
     //std::cout << "forall anchors" << std::endl;
     forall_nodes(anchor, G) {
-        int d = G.degree(anchor);
+        int d = G.outdeg(anchor);
         edge e;
         node w;
-        std::cout << "node: " << anchor << std::endl;
+        // std::cout << "node: " << anchor << std::endl;
         if (d > 3) { 
-            //std::cout << anchor << " : deg > 3 = " << d << std::endl;
+            // std::cout << anchor << " : deg > 3 = " << d << std::endl;
 
             int n_to_add = 3;
 
@@ -340,16 +351,14 @@ void degree_fix(graph& G, edge_array<int> &cost, std::vector<std::pair<edge, int
             std::vector<edge> edges_w; // edges_w[i] would be (anchor -> adjacent_w[i])
             std::vector<node> adjacent_v;
 
-            //std::cout << "push adj_edjes" << std::endl;
+            // std::cout << "push adj_edjes" << std::endl;
             forall_adj_edges(e, anchor) {
-                if (G.source(e) != anchor) {
-                    edges_w.push_back(e);
-                    node x = G.opposite(anchor, e);
-                    //std::cout << "adjacent_w: " << x << std::endl;
-                    adjacent_w.push_back(x);
+                edges_w.push_back(e);
+                node x = G.opposite(anchor, e);
+                // std::cout << "adjacent_w: " << x << std::endl;
+                adjacent_w.push_back(x);
 
-                    // std::cout << "edge: " << e << std::endl; 
-                }
+                // std::cout << "edge: " << e << std::endl; 
             }
 
             // replace w with new v
@@ -359,55 +368,72 @@ void degree_fix(graph& G, edge_array<int> &cost, std::vector<std::pair<edge, int
                 w = *it;
                 // add new node v
                 node v = G.new_node();
+                nodes_added_cnt++;
                 adjacent_v.push_back(v);
                 // std::cout << "adjacent_v: " << v << std::endl;
             }
 
             // connect v[i] with v[i+1 mod d] with cost 0
-            // std::cout << "connect new nodes " << adjacent_v.size() << std::endl;
+            std::cout << "connect new nodes " << adjacent_v.size() << std::endl;
             for (int i = 0; i < adjacent_v.size(); i++) {
                 int idx_src = i;
                 int idx_trg = (i + 1) % adjacent_v.size();
 
-                //std::cout << "src["<< idx_src << "] = ";
+                // std::cout << "src["<< idx_src << "] = ";
                 node src = adjacent_v[idx_src];
-                //std::cout << src << std::endl;
+                // std::cout << src << std::endl;
 
-                //std::cout << "trg[" << idx_trg << "] = ";
+                // std::cout << "trg[" << idx_trg << "] = ";
                 node trg = adjacent_v[idx_trg];
-                //std::cout << trg << std::endl;
+                // std::cout << trg << std::endl;
                 
                 e = G.new_edge(src, trg);
+                edges_added_cnt++;
+
+                temp_cost.insert(_e, 0);
                 deferred_costs.push_back(std::make_pair(e, 0));
             }
 
             // replace w[i] -> anchor with w[i] -> v[i] with the same cost
-            // std::cout << "update weights" << std::endl;
+            std::cout << "update weights" << std::endl;
             for (int i = 0; i < adjacent_v.size(); i++) {
                 // std::cout << "original[" << i << "] = " << std::endl;
                 edge original = edges_w[i];
                 // std::cout << original << std::endl;
 
                 // std::cout << "original cost" << std::endl;
-                int c = cost[original];
+
+                dic_item dit = temp_cost.lookup(original);
+                int c = dit == NULL ? 0 : temp_cost[dit];
+                // int c = cost[original];
                 // std::cout << "_w[" << i << "] = ";
                 node _w = adjacent_w[i];
                 // std::cout << _w << " - _v[" << i << "] = ";
                 node _v = adjacent_v[i];
                 // std::cout << _v << std::endl;
 
+                // std::cout << "adding edge " << std::endl;
+                edges_added_cnt++;
                 e = G.new_edge(_w, _v);
 
                 // std::cout << "new edge: " << e << ", cost -> " << c << std::endl;
+
+                temp_cost.insert(e, c);
                 deferred_costs.push_back(std::make_pair(e, c));
+                // std::cout << "edge map" << std::endl;
                 edge_map.insert(original, e);
+                // std::cout << "edges_to_delete" << std::endl;
                 edges_to_delete.push_back(original);
+                // std::cout << i << " iteration done" << std::endl;
             }
 
             nodes_to_delete.push_back(anchor);
         } else { // if d > 3
+            // std::cout << "not deleting" << std::endl;
             forall_adj_edges(e, anchor) {
-                deferred_costs.push_back(std::make_pair(e, cost[e]));
+                dic_item dit = temp_cost.lookup(e);
+                int c = dit == NULL ? 0 : temp_cost[dit];
+                deferred_costs.push_back(std::make_pair(e, c));
             }
         }
     }
@@ -429,13 +455,15 @@ void degree_fix(graph& G, edge_array<int> &cost, std::vector<std::pair<edge, int
     std::vector<node>::iterator nit;
     std::vector<edge>::iterator eit;
 
-    // std::cout << "deleting edges" << std::endl;
+    // std::cout << "added " << nodes_added_cnt << " nodes and " << edges_added_cnt << " edges" << std::endl;
+
+    // std::cout << "deleting " << edges_to_delete.size() << " edges" << std::endl;
     for (eit = edges_to_delete.begin(); eit != edges_to_delete.end(); ++eit) {
         edge x = *eit;
         G.del_edge(x);
     }
 
-    // std::cout << "deleting nodes" << std::endl;
+    // std::cout << "deleting " << nodes_to_delete.size() << " nodes" << std::endl;
     for (nit = nodes_to_delete.begin(); nit != nodes_to_delete.end(); ++nit) {
         node x = *nit;
         G.del_node(x);
@@ -456,23 +484,29 @@ void degree_fix(graph& G, edge_array<int> &cost, std::vector<std::pair<edge, int
     cost = _cost; // swap with new one
 }
 
-static std::vector<std::set<node>> printed;
-
-std::set<node> csearch(graph &G, node &v, edge_array<bool> &in_mst){
+std::set<node> csearch(graph &G, node &v, edge_array<bool> &in_mst, std::vector<std::set<node>> &printed, node_array<bool> &visited){
+    // std::cout << "csearch " << v << std::endl;
     std::set<node> cluster;
     cluster.insert(v);
-    node w;
+    visited[v] = true;
+
+    // std::cout << "inserting " << std::endl;
+
     //for all child nodes w of v
+    node w;
     edge e;
     forall_adj_edges(e, v) {
         if (in_mst[e]) {
             node w = G.opposite(v, e);
+            if (!visited[w]){
+                std::set<node> subcluster = csearch(G, w, in_mst, printed, visited);
+                // std::cout << "csearch" << v << "subcluster " << w << std::endl;
 
-            std::set<node> subcluster = csearch(G, w, in_mst);
-            std::set<node>::iterator it;
-            for (it = subcluster.begin(); it != subcluster.end(); ++it) {
-                node n = *it;
-                cluster.insert(n);
+                std::set<node>::iterator it;
+                for (it = subcluster.begin(); it != subcluster.end(); ++it) {
+                    node n = *it;
+                    cluster.insert(n);
+                }
             }
         }
     }
@@ -480,7 +514,7 @@ std::set<node> csearch(graph &G, node &v, edge_array<bool> &in_mst){
     if (cluster.size() < z) {
         return cluster;
     } else {
-        // printed = cluster;
+        printed.push_back(cluster);
         std::set<node> empty;
         return empty; // supposed returned empty set
     }
@@ -489,92 +523,119 @@ std::set<node> csearch(graph &G, node &v, edge_array<bool> &in_mst){
 
 // builds the mst in a streaming-iterative fashion
 triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair<edge,int>> &cost_updates){
+    std::vector<std::set<node>> printed;
+
     // make degree fix and make mst
     timer mst_t;
     mst_t.start();
-    // std::cout << "degree fix" << std::endl;
-    degree_fix(G, cost, cost_updates);
-    // std::cout << "MIN_SPANNING_TREE" << std::endl;
-    list<edge> mst = MIN_SPANNING_TREE(G, cost);
 
-    std::cout << "in mst" << std::endl;
+    std::cout << "Before degree fix: nodes = " << G.number_of_nodes() << " edges = " << G.number_of_edges() << std::endl; 
+    degree_fix(G, cost, cost_updates);
+    std::cout << "After degree fix: nodes = " << G.number_of_nodes() << " edges = " << G.number_of_edges() << std::endl; 
+
+    list<edge> mst = MIN_SPANNING_TREE(G, cost);
 
     edge_array<bool> in_mst(G);
     edge e;
+
+    forall_edges(e, G) {
+        in_mst[e] = false;
+    }
+
     forall(e, mst) {
         in_mst[e] = true;
     }
-    mst_t.stop();
 
-    std::cout << "FINDCLUSTERS START" << std::endl;
+    mst_t.stop();
 
     timer cluster_timer;
     cluster_timer.start();
-//     /* FINDCLUSTERS */
-//     // find some leaf node of mst and assign as root
-//     node root;
+    /* FINDCLUSTERS */
+    // find some leaf node of mst and assign as root
+    node root;
 
-//     forall(e, G) {
-//         node n = G.source(e);
-//         int deg = 0;
-//         edge ae;
-//         forall_adj_edges(ae, n){
-//             if (in_mst[ae]) {
-//                 deg++;
-//             }
-//         }
+    // basically for all nodes, pick the first one that
+    // is in mst and got deg 1 (=> is a leaf node)
+    node n;
+    forall_nodes(n, G) {
+        root = n;
 
-//         if (deg == 1) {
-//             root = n;
-//             break;
-//         }
-//     }
+        int deg = 0;
+        edge ae;
+        forall_adj_edges(ae, n){
+            if (in_mst[ae]) {
+                deg++;
+            }
+        }
 
-//     std::vector<std::set<node>> clusters;
-//     printed = clusters
+        if (deg == 1) {
+            /* root is now where csearch is going to start */
+            break;
+        }
+    }
 
-//     // essentially a dfs variant
-//     std::set<node> cluster = csearch(G, root, in_mst);
-//     if (clusters.size() > 0) { // merge with last printed if empty is returned
-//         std::set<node> last_printed = printed.back();
+    std::cout << "findclusters: csearch, leaf node: " << root << std::endl;
 
-//         std::set<node>::iterator it;
-//         for (it = printed.begin(); it != printed.end(); ++it) {
-//             node n = *it;
-//             last_printed.insert(n);
-//         }
-//     }
 
-//     clusters = printed;
-//     // make map from clusters to idx
-//     node_array<int> cluster_to_index(G);
-//     int total_clusters = clusters.size();
+    node_array<bool> _visited(G);
+    node x;
+    // int ii = 0;
+    forall_nodes(x, G) {
+        // ii++;
+        // std::cout << "node: " << x << std::endl;
+        _visited[x] = false;
+    }
+    // std::cout << "iterated " << ii << " nodes" << std::endl;
 
-//     for (int i = 0; i < clusters.size(); i++) {
-//         std::set<node> current_cluster = clusters[i];
+    std::set<node> _cluster = csearch(G, root, in_mst, printed, _visited);
+    if (_cluster.size() > 0) { // merge with last printed if non empty is returned
+        std::cout << "non empty returned, merging with last_printed" << std::endl;
+        std::set<node> last_printed = printed.back();
 
-//         std::set<node>::iterator it;
-//         for (it = current_cluster.begin(); it != current_cluster.end(); ++it) {
-//             cluster_to_index[*it] = i;
-//         }
-//     }
+        std::set<node>::iterator it;
+        for (it = _cluster.begin(); it != _cluster.end(); ++it) {
+            node n = *it;
+            last_printed.insert(n);
+        }
+    }
 
-//     map<std::pair<int, int>, edge> min_set_cost;
-//     edge_array<std::pair<int, int>> edge_set(G);
-//     // partition edges to E_i,j sets
-//     // and map E_i,j sets to min cost map
-//     forall(e, mst) {
-//         node src = G.source(e);
-//         node trg = G.target(e);
+    std::vector<std::set<node>> clusters = printed;
 
-//         std::pair<int, int> set_descriptor = std::make_pair(cluster_to_index[src], cluster_to_index[trg]);
-//         edge_set[e] = set_descriptor;
-//         if (!min_set_cost.defined(set_descriptor)) {
-//             min_set_cost[set_descriptor] = e;
-//         } else if (cost[min_set_cost[set_descriptor]] > cost[e]) {
-//             min_set_cost[set_descriptor] = e;
-//         }
-//     }
+    std::cout << "map node -> clust idx" << std::endl;
+    // make map from each node's cluster to cluster idx
+    node_array<int> cluster_to_index(G);
+    int total_clusters = clusters.size();
+
+    int i = 0;
+    std::vector<std::set<node>>::iterator cit;
+    for (cit = clusters.begin(); cit != clusters.end(); ++cit) {
+        std::set<node> current_cluster = *cit;
+
+        std::set<node>::iterator it;
+        for (it = current_cluster.begin(); it != current_cluster.end(); ++it) {
+            cluster_to_index[*it] = i;
+        }
+
+        i++;
+    }
+
+    // std::cout << "partition edges, find min set cost" << std::endl;
+    // map<std::pair<int, int>, edge> min_set_cost;
+    // edge_array<std::pair<int, int>> edge_set(G);
+    // // partition edges to E_i,j sets
+    // // and map E_i,j sets to min cost map
+    // forall(e, mst) {
+    //     node src = G.source(e);
+    //     node trg = G.target(e);
+
+    //     std::pair<int, int> set_descriptor = std::make_pair(cluster_to_index[src], cluster_to_index[trg]);
+    //     edge_set[e] = set_descriptor;
+    //     if (!min_set_cost.defined(set_descriptor)) {
+    //         min_set_cost[set_descriptor] = e;
+    //     } else if (cost[min_set_cost[set_descriptor]] > cost[e]) {
+    //         min_set_cost[set_descriptor] = e;
+    //     }
+    // }
     cluster_timer.stop();
     /* END FINDCLUSTERS */
     std::cout << "FINDCLUSTERS END" << std::endl;
@@ -770,7 +831,7 @@ int tests()
 
     std::cout << "Simple Graphs" << std::endl << std::endl;
 
-    int n_sizes[] = {100};
+    int n_sizes[] = {20};
     for (int i = 0; i < 1; i++) {
         int n = n_sizes[i];
         int m = 2 * n * log(n);
