@@ -612,7 +612,7 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
     std::vector<std::set<node>> clusters = printed;
 
     std::cout << "map node -> clust idx" << std::endl;
-    // make map from each node's cluster to cluster idx
+    // make map from each node to cluster idx
     node_array<int> cluster_to_index(G);
     int total_clusters = clusters.size();
 
@@ -629,10 +629,12 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
         i++;
     }
 
+    int max_clust_idx = i-1; // we use this to allocate subcluster ids later
+
     std::cout << "partition edges, find min set cost" << std::endl;
 
     /* minimum cost of edges connecting cluster idx - cluster idx */
-    map<std::pair<int, int>, edge> min_set_cost;
+    h_array<std::pair<int, int>, edge> min_set_cost;
     /* cluster idx - cluster idx where each edge belongs to */
     edge_array<std::pair<int, int>> edge_set(G);
 
@@ -823,7 +825,7 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
 
                     edge e;
                     forall_adj_edges(e, s) {
-                        if (in_mst[e]) { // search only for edges inside mst
+                        if (in_mst[e] && cluster_to_index[n] == clust) { // search only for edges inside mst
                             node k = G.opposite(e, s);
                             stack.push(k);
                         }
@@ -846,7 +848,7 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
 
                     edge e;
                     forall_adj_edges(e, s) {
-                        if (in_mst[e]) { // search only for edges inside mst
+                        if (in_mst[e] && cluster_to_index[n] == clust) { // search only for edges inside mst
                             node k = G.opposite(e, s);
                             stack.push(k);
                         }
@@ -854,21 +856,62 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
                 }
 
                 // then, split to subclusters Vi' Vi''
-                // Vi
-                std::vector<node>::iterator it;
-                for(it = cluster_i.begin(); it != cluster_i.end(); ++it){
-                    node _n = *it;
-                }
+                // Vi gets the old cluster id
+                // vii gets a new id
+                int vi_idx = clust;
+                int vii_idx = ++max_clust_idx;
 
+                // update clust idx
+                std::vector<node>::iterator it;
+                // update node cluster ids just for the second cluster whose id changed
                 for(it = cluster_ii.begin(); it != cluster_ii.end(); ++it){
                     node _n = *it;
+                    cluster_to_index[_n] = vii_idx;
+                    edge __e;
+                    forall_adj_edges(__e, _n) {
+                        int __trg_idx = cluster_to_index[G.opposite(_n, __e)];
+                        edge_set[__e] = std::make_pair(vii_idx, __trg_idx);
+                    }
                 }
-                // TODO: how to index those (new idx?)
 
-                // update min_set_cost (minimum distance between clusters)
-                // update edge_set (where each edge belongs)
+                // remove - invalidate edge pair min costs
+                std::vector<std::pair<int, int>> descriptors_to_undefine;
+                std::pair<int, int> _d;
+                forall_defined(_d, min_set_cost){
+                    if (_d.first == clust || _d.second == clust) {
+                        descriptors_to_undefine.push_back(_d);
+                    }
+                }
+
+                std::vector<std::pair<int, int>>::iterator d_it;
+                for(d_it = descriptors_to_undefine.begin(); d_it != descriptors_to_undefine.end(); ++d_it){
+                    min_set_cost.undefine(*d_it);
+                }
+
+                // update min_set_cost (minimum cost between clusters)
+                forall(e, mst) {
+                    node src = G.source(e);
+                    node trg = G.target(e);
+                    
+                    int src_idx = cluster_to_index[src];
+                    int trg_idx = cluster_to_index[trg];
+
+                    // if it belongs to the cluster we split
+                    if (src_idx == vi_idx || src_idx == vii_idx || trg_idx == vi_idx || trg_idx == vii_idx){
+                        std::pair<int, int> set_descriptor = std::make_pair(src_idx, trg_idx);
+                        edge_set[e] = set_descriptor;
+
+                        if (!min_set_cost.defined(set_descriptor)) {
+                            min_set_cost[set_descriptor] = e;
+                        } else if (cost[min_set_cost[set_descriptor]] > cost[e]) {
+                            min_set_cost[set_descriptor] = e;
+                        }
+                    }
+                }
 
                 // update cluster_src and cluster_trg variables
+                cluster_src = vi_idx;
+                cluster_trg = vii_idx;
             }
 
             // do a bfs to find out connected component cluster ids
@@ -929,18 +972,11 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
 
             std::pair<int, int> edge_min_clusters = edge_array[edge_min];
             int edge_min_a = edge_min_clusters.first;
-            int edge_min_b = edge_min_clusters.second
+            int edge_min_b = edge_min_clusters.second;
 
             // update minimun distances between clusters (min_set_cost)
-            if(min_set_cost.defined(std::make_pair(edge_min_a, edge_min_b))) {
-                std::pair<int, int> descriptor = std::make_pair(edge_min_a, edge_min_b);
-                int _curr_cost = cost[min_set_cost[descriptor]];
-
-                if (_c < _curr_cost) {
-                    min_set_cost[descriptor] = edge_min;
-                }
-            } else if (min_set_cost.defined(std::make_pair(edge_min_a, edge_min_b))){
-                std::pair<int, int> descriptor = std::make_pair(edge_min_b, edge_min_a);
+            std::pair<int, int> descriptor = std::make_pair(edge_min_a, edge_min_b);
+            if(min_set_cost.defined(descriptor)) {
                 int _curr_cost = cost[min_set_cost[descriptor]];
 
                 if (_c < _curr_cost) {
