@@ -178,7 +178,6 @@ triplet<float> MST_STATIC(graph &G, edge_array<int> &cost, std::vector<std::pair
             vertex v = vertices[G.source(to_update)];
             vertex w = vertices[G.target(to_update)];
 
-            // std::cout << "D.evert " << v << std::endl;
             D.evert(v);
 
             vertex max_cost_vertex = w;
@@ -309,10 +308,6 @@ triplet<float> MST_STATIC(graph &G, edge_array<int> &cost, std::vector<std::pair
 // so that no vertex got more than 3 degree
 // page 4 of original document, page 7 of scanned pdf from purdue university
 void degree_fix(graph& G, edge_array<int> &cost, std::vector<std::pair<edge, int>> &cost_updates){
-    /* schedule these to be deleted after the forall_nodes */
-    std::vector<node> nodes_to_delete;
-    std::vector<edge> edges_to_delete;
-
     /* G's original edges to new mapped edges (used for cost_updates) */
     dictionary<edge, edge> edge_map;
 
@@ -414,11 +409,11 @@ void degree_fix(graph& G, edge_array<int> &cost, std::vector<std::pair<edge, int
                 // std::cout << "edge map" << std::endl;
                 edge_map.insert(original, e);
                 // std::cout << "edges_to_delete" << std::endl;
-                edges_to_delete.push_back(original);
+                G.del_edge(original);
                 // std::cout << i << " iteration done" << std::endl;
             }
 
-            nodes_to_delete.push_back(anchor);
+            G.del_node(anchor);
         } else { // if d > 3
             // std::cout << "not deleting" << std::endl;
             
@@ -440,24 +435,7 @@ void degree_fix(graph& G, edge_array<int> &cost, std::vector<std::pair<edge, int
         }
     }
 
-    // delete edges and nodes that got scheduled
-    std::vector<node>::iterator nit;
-    std::vector<edge>::iterator eit;
-
     // std::cout << "added " << nodes_added_cnt << " nodes and " << edges_added_cnt << " edges" << std::endl;
-
-    /* iteration exception if we delete this while looping over them, so do it here */
-    // std::cout << "deleting " << edges_to_delete.size() << " edges" << std::endl;
-    for (eit = edges_to_delete.begin(); eit != edges_to_delete.end(); ++eit) {
-        edge x = *eit;
-        G.del_edge(x);
-    }
-
-    // std::cout << "deleting " << nodes_to_delete.size() << " nodes" << std::endl;
-    for (nit = nodes_to_delete.begin(); nit != nodes_to_delete.end(); ++nit) {
-        node x = *nit;
-        G.del_node(x);
-    }
 
     // make new edge_array cost
     // to make allocation for deleted new edges
@@ -571,6 +549,17 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
     // generate vertices
     forall_nodes(n, G) {
         vertices[n] = D.make();
+    }
+
+    std::vector<std::pair<edge, int>>::iterator it;
+
+    for (it = cost_updates.begin(); it != cost_updates.end(); ++it) {
+        std::pair<edge, int> pair = *it;
+
+        node p = G.source(pair.first);
+        if (vertices[p] == NULL) {
+            vertices[p] = D.make();
+        }
     }
 
     map<vertex, node> vertex_to_node;
@@ -703,7 +692,6 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
     timer per_edge;
 
     per_edge.start();
-    std::vector<std::pair<edge, int>>::iterator it;
 
     for (it = cost_updates.begin(); it != cost_updates.end(); ++it) {
         std::pair<edge, int> pair = *it;
@@ -727,23 +715,28 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
         if (!is_in_mst && new_cost < prev_cost) { // cost of non tree edge decreased
             std::cout << "dynamic tree for cycle" << std::endl;
             cost[to_update] = new_cost;
+            in_mst[to_update] = true;
+            mst.append(to_update);
 
             // find cycle using dynamic tree first
             node _v = G.source(to_update);
             node _w = G.target(to_update);
 
+            std::cout << "_v = " << _v << " _w = " << _w << std::endl;
+
             /* As discussed in section 2 (dynamic trees) */
             vertex v = vertices[_v];
             vertex w = vertices[_w];
 
-            // std::cout << "D.evert " << v << std::endl;
+            std::cout << "v = " << v << " w = " << w << std::endl;
+
             D.evert(v);
 
             vertex max_cost_vertex = w;
             int max_cost = new_cost;
 
             // find edge on tree that got maximum cost on the cycle created
-            // std::cout << "findmax in cycle" << std::endl;
+            std::cout << "findmax in cycle" << std::endl;
             vertex tmp = w; // D.findmax(w)
             vertex tmp_kid = NULL;
             while (tmp != v){ // from w to root v
@@ -765,14 +758,14 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
                 tmp_kid = tmp;
             }
 
-            // std::cout << its << " end findmax in cycle " << tmp << std::endl;
+            std::cout << "end findmax in cycle: " << tmp << std::endl;
 
             // if there is no change, the above part is going to restore the previously deleted edge (in mst)
             // else, its going to add the correct new one
             node _x = vertex_to_node[D.parent(tmp)];
             node _y = vertex_to_node[tmp];
 
-            // std::cout << "fix mst " << corresponding_source << " " << corresponding_target << std::endl;
+            std::cout << "fix mst: tmp = " << tmp << std::endl;
             // idk if there is a more efficient way to get an edge between 
             // a source and target node, if it exists, null otherwise
             edge e;
@@ -811,6 +804,7 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
 
             /*** else (x, y in same cluster without v or without w) ***/
             // split cluster i on (x, y) to Vi' and Vi''
+            std::cout << "split cluster to vi', vi''" << std::endl;
 
             /* CLUSTER SPLIT */
             int clust = cluster_src;
@@ -826,6 +820,7 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
                 clustid[n] = 0;
             }
             
+            std::cout << "clust i dfs" << std::endl;
             list<node> stack;
             node s;
             stack.push(G.source(to_update)); 
@@ -849,6 +844,8 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
                     }
                 }
             }
+
+            std::cout << "clust ii dfs" << std::endl;
 
             stack.clear();
             stack.push(G.target(to_update)); 
@@ -879,6 +876,10 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
             int vi_idx = clust;
             int vii_idx = ++max_clust_idx;
 
+            std::cout << "clust i id: " << vi_idx << " - clust ii id: " << vii_idx << std::endl;
+
+            std::cout << "updating clust ids" << std::endl;
+
             // update clust idx
             std::vector<node>::iterator it;
             // update node cluster ids just for the second cluster whose id changed
@@ -892,6 +893,7 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
                 }
             }
 
+            std::cout << "invalidate edge pair min costs" << std::endl;
             // remove - invalidate edge pair min costs
             std::vector<std::pair<int, int>> descriptors_to_undefine;
             std::pair<int, int> _d;
@@ -906,10 +908,13 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
                 min_set_cost.undefine(*d_it);
             }
 
+            std::cout << "updating clust cardinalities" << std::endl;
+
             // update cardinalities
             cardinalities[vi_idx] = clust_i.size();
             cardinalities[vii_idx] = clust_ii.size();
 
+            std::cout << "updating min_set_cost" << std::endl;
             // update min_set_cost (minimum cost between clusters)
             forall(e, mst) {
                 node src = G.source(e);
@@ -941,6 +946,7 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
 
             int neighbouring_clust = -1;
 
+            std::cout << "end cluster split" << std::endl;
             if (clust_size < z) { // if new clusters got less than z vertices
                 // find one cluster that clust is connected to
                 forall(e, mst) {
@@ -1355,6 +1361,7 @@ int tests()
 
         std::cout << "Random Simple Graph (" << n << ", " << m << ") " << std::endl;
         benchmark(g, cost, n, m);
+
     }
 
     std::cout << "Grid Graphs" << std::endl << std::endl;
