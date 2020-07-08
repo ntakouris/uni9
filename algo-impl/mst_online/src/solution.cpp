@@ -1,5 +1,5 @@
-#define BENCH_TIMES 1 // how many runs per edge cost updates that get generated (per graph)
-#define DIFFERENT_EDGE_COST_TIMES 1 // how many times to make different edge cost update stream
+#define BENCH_TIMES 5 // how many runs per edge cost updates that get generated (per graph)
+#define DIFFERENT_EDGE_COST_TIMES 5 // how many times to make different edge cost update stream
 
 #include <math.h>
 #include <vector>
@@ -41,8 +41,8 @@ int Hash(const std::pair<int, int>& x)
 
 static int z = 3;
 
-// #define RUN_STATIC
-#define RUN_ONLINE 
+#define RUN_STATIC 1
+// #define RUN_ONLINE 1
 
 #define EDGE_COST_MIN 1
 #define EDGE_COST_MAX 10000
@@ -490,6 +490,14 @@ std::set<node> csearch(graph &G, node &v, edge_array<bool> &in_mst, std::vector<
         return cluster;
     } else {
         printed.push_back(cluster);
+        std::set<node>::iterator it;
+        std::cout << "cluster: ";
+        for (it = cluster.begin(); it != cluster.end(); ++it) {
+            node n = *it;
+            std::cout << " " << n;
+        }
+        std::cout << std::endl;
+
         std::set<node> empty;
         return empty; // supposed returned empty set
     }
@@ -552,15 +560,6 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
     }
 
     std::vector<std::pair<edge, int>>::iterator it;
-
-    for (it = cost_updates.begin(); it != cost_updates.end(); ++it) {
-        std::pair<edge, int> pair = *it;
-
-        node p = G.source(pair.first);
-        if (vertices[p] == NULL) {
-            vertices[p] = D.make();
-        }
-    }
 
     map<vertex, node> vertex_to_node;
 
@@ -648,6 +647,7 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
         int __i = 0;
         for (it = current_cluster.begin(); it != current_cluster.end(); ++it) {
             cluster_to_index[*it] = i;
+            std::cout << "cluster(" << *it << ")" << " = " << i << std::endl;
             __i++;
         }
 
@@ -722,7 +722,7 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
             node _v = G.source(to_update);
             node _w = G.target(to_update);
 
-            std::cout << "_v = " << _v << " _w = " << _w << std::endl;
+            // std::cout << "_v = " << _v << " _w = " << _w << std::endl;
 
             /* As discussed in section 2 (dynamic trees) */
             vertex v = vertices[_v];
@@ -736,7 +736,7 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
             int max_cost = new_cost;
 
             // find edge on tree that got maximum cost on the cycle created
-            std::cout << "findmax in cycle" << std::endl;
+            // std::cout << "findmax in cycle" << std::endl;
             vertex tmp = w; // D.findmax(w)
             vertex tmp_kid = NULL;
             while (tmp != v){ // from w to root v
@@ -758,14 +758,22 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
                 tmp_kid = tmp;
             }
 
-            std::cout << "end findmax in cycle: " << tmp << std::endl;
+            // std::cout << "end findmax in cycle: " << tmp << std::endl;
 
             // if there is no change, the above part is going to restore the previously deleted edge (in mst)
             // else, its going to add the correct new one
+
+            std::cout << "fix mst: tmp = " << tmp << ", D.parent = " << D.parent(tmp) << ", tmp_kid = " << tmp_kid << std::endl;
+
+            if (tmp ==  NULL) {
+                tmp = tmp_kid;
+            }
+
             node _x = vertex_to_node[D.parent(tmp)];
             node _y = vertex_to_node[tmp];
 
-            std::cout << "fix mst: tmp = " << tmp << std::endl;
+            std::cout << "_x = " << _x << ", _y = " << _y << tmp << std::endl;
+
             // idk if there is a more efficient way to get an edge between 
             // a source and target node, if it exists, null otherwise
             edge e;
@@ -1022,6 +1030,8 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
             mst.remove(to_update);
 
             if (cluster_src == cluster_trg) {
+                std::cout << "same cluster split" << std::endl;
+
                 /* CLUSTER SPLIT */
                 int clust = cluster_src;
                 // split clust into 2 clusters
@@ -1088,6 +1098,8 @@ triplet<float> MST_ONLINE(graph &G, edge_array<int> &cost, std::vector<std::pair
                 // vii gets a new id
                 int vi_idx = clust;
                 int vii_idx = ++max_clust_idx;
+
+                std::cout << "subluster id: " << clust << " and " << vii_idx << std::endl;
 
                 // update clust idx
                 std::vector<node>::iterator it;
@@ -1338,9 +1350,9 @@ int tests()
 
     std::cout << "Simple Graphs" << std::endl << std::endl;
 
-    int n_sizes[] = {10};
-    for (int i = 0; i < 1; i++) {
-        int n = n_sizes[i];
+    int sg_sizes[] = {1000, 2000, 4000};
+    for (int i = 0; i < 2; i++) {
+        int n = sg_sizes[i];
         int m = 2 * n * log(n);
 
         // generate connected graph with n nodes and m edges
@@ -1357,17 +1369,66 @@ int tests()
             cost[e] = ((c % (EDGE_COST_MAX - EDGE_COST_MIN + 1)) + EDGE_COST_MIN);
         }
 
-        z = max(1.0, pow(m, 2/5)); // see paper
+        // g.number_of_edges() different than m after make_connected
+        z = max(1.0, pow(g.number_of_edges(), 0.4f)); // see paper (0.4 = 2/5)
+        // std::cout << "Z = " << z << std::endl;
 
-        std::cout << "Random Simple Graph (" << n << ", " << m << ") " << std::endl;
-        benchmark(g, cost, n, m);
-
+        std::cout << "Random Simple Graph (" << n << ", " << g.number_of_edges() << ") " << std::endl;
+        benchmark(g, cost, n, g.number_of_edges());
     }
 
     std::cout << "Grid Graphs" << std::endl << std::endl;
 
-    std::cout << "Fully Connected Graphs" << std::endl << std::endl;
+    int gg_sizes[] = {2000, 4000};
+    for (int i = 0; i < 2; i++) {
+        int n = gg_sizes[i];
+        int m = 2 * n * log(n);
 
+        // generate connected graph with n nodes and m edges
+        graph g;
+        random_simple_loopfree_graph(g, n, m);
+        g.make_undirected();
+
+        edge_array<int> cost(g);
+        edge e;
+        forall_edges(e, g) {
+            int c;
+            S >> c;
+            cost[e] = ((c % (EDGE_COST_MAX - EDGE_COST_MIN + 1)) + EDGE_COST_MIN);
+        }
+
+        z = max(1.0, pow(g.number_of_edges(), 0.4f)); // see paper (0.4 = 2/5)
+        // std::cout << "Z = " << z << std::endl;
+
+        std::cout << "Grid Graph (" << n << ", " << g.number_of_edges() << " ) " << std::endl;
+        benchmark(g, cost, n, g.number_of_edges());
+    }
+
+    std::cout << "Complete Graphs" << std::endl << std::endl;
+
+    int fc_sizes[] = {200, 400};
+    for (int i = 0; i < 2; i++) {
+        int n = fc_sizes[i];
+
+        // generate connected graph with n nodes and m edges
+        graph g;
+        complete_graph(g, n);
+        g.make_undirected();
+
+        edge_array<int> cost(g);
+        edge e;
+        forall_edges(e, g) {
+            int c;
+            S >> c;
+            cost[e] = ((c % (EDGE_COST_MAX - EDGE_COST_MIN + 1)) + EDGE_COST_MIN);
+        }
+
+        z = max(1.0, pow(g.number_of_edges(), 0.4f)); // see paper (0.4 = 2/5)
+        // std::cout << "Z = " << z << std::endl;
+
+        std::cout << "Complete Graph (" << n << ", " << g.number_of_edges() << " ) " << std::endl;
+        benchmark(g, cost, n, g.number_of_edges());
+    }
 
     return 0;
 }
