@@ -39,7 +39,6 @@ unsigned int leds = led0 | led1; // 9 0s
 unsigned int _inititial_led0_finished = 0;
 unsigned int _inititial_cnt = 0;
 
-// am = 1054332 =>
 unsigned int[] password = {4, 3, 3, 2};
 
 unsigned int[] pass_buf = {0, 0, 0, 0};
